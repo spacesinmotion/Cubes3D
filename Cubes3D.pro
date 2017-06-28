@@ -66,4 +66,5 @@ FORMS    += cubes3d.ui
 
 DISTFILES += \
     shader/vshader.glsl \
-    shader/fshader.glsl
+    shader/fshader.glsl \
+    .gitignore
