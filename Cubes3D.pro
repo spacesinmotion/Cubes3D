@@ -36,7 +36,10 @@ SOURCES += main.cpp\
     slm/vec3.inl \
     slm/vec4.cpp \
     slm/vec4.inl \
-    dispayobject.cpp
+    dispayobject.cpp \
+    rply/rply.c \
+    plyimport.cpp \
+    geometry.cpp
 
 HEADERS  += cubes3d.h \
     view3d.h \
@@ -60,7 +63,10 @@ HEADERS  += cubes3d.h \
     slm/vec3.h \
     slm/vec4.h \
     slm/vector_simd.h \
-    dispayobject.h
+    dispayobject.h \
+    rply/rply.h \
+    plyimport.h \
+    geometry.h
 
 FORMS    += cubes3d.ui
 

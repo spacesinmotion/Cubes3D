@@ -1,6 +1,8 @@
 #ifndef DISPAYOBJECT_H
 #define DISPAYOBJECT_H
 
+#include "geometry.h"
+
 #include <QOpenGLBuffer>
 #include <QOpenGLFunctions>
 #include <QString>
@@ -26,6 +28,8 @@ private:  // data
   QOpenGLBuffer m_arrayBuf;
   QOpenGLBuffer m_indexBuf;
   int m_numberIndices;
+
+  GeometryPtr m_data;
 };
 
 #endif  // DISPAYOBJECT_H

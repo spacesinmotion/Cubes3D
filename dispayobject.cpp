@@ -1,4 +1,5 @@
 #include "dispayobject.h"
+#include "plyimport.h"
 
 #include <QOpenGLShaderProgram>
 
@@ -42,42 +43,41 @@ void DisplayObject::draw(QOpenGLShaderProgram &program)
   program.setAttributeBuffer(normalLocation, GL_FLOAT, offset, 3,
                              sizeof(GLfloat[6]));
 
-  glDrawElements(GL_QUADS, m_numberIndices, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, m_numberIndices, GL_UNSIGNED_INT, 0);
 }
 
 void DisplayObject::init()
 {
-  static GLfloat vertices[] = {
-      0.5,  0.5,  0.5,  0,  0,  1,  -0.5, 0.5,  0.5,  0,  0,  1,
-      -0.5, -0.5, 0.5,  0,  0,  1,  0.5,  -0.5, 0.5,  0,  0,  1,
-      0.5,  0.5,  0.5,  1,  0,  0,  0.5,  -0.5, 0.5,  1,  0,  0,
-      0.5,  -0.5, -0.5, 1,  0,  0,  0.5,  0.5,  -0.5, 1,  0,  0,
-      0.5,  0.5,  0.5,  0,  1,  0,  0.5,  0.5,  -0.5, 0,  1,  0,
-      -0.5, 0.5,  -0.5, 0,  1,  0,  -0.5, 0.5,  0.5,  0,  1,  0,
-      -0.5, 0.5,  0.5,  -1, 0,  0,  -0.5, 0.5,  -0.5, -1, 0,  0,
-      -0.5, -0.5, -0.5, -1, 0,  0,  -0.5, -0.5, 0.5,  -1, 0,  0,
-      -0.5, -0.5, -0.5, 0,  -1, 0,  0.5,  -0.5, -0.5, 0,  -1, 0,
-      0.5,  -0.5, 0.5,  0,  -1, 0,  -0.5, -0.5, 0.5,  0,  -1, 0,
-      0.5,  -0.5, -0.5, 0,  0,  -1, -0.5, -0.5, -0.5, 0,  0,  -1,
-      -0.5, 0.5,  -0.5, 0,  0,  -1, 0.5,  0.5,  -0.5, 0,  0,  -1};
+  m_data = plyImport(qPrintable(m_filename)).read();
 
-  static GLuint indices[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11,
-                             12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23};
+  for (int i = 0; i < m_data->quads.size(); i += 4) {
+    m_data->tris.push_back(m_data->quads[i + 0]);
+    m_data->tris.push_back(m_data->quads[i + 1]);
+    m_data->tris.push_back(m_data->quads[i + 2]);
+
+    m_data->tris.push_back(m_data->quads[i + 2]);
+    m_data->tris.push_back(m_data->quads[i + 3]);
+    m_data->tris.push_back(m_data->quads[i + 0]);
+  }
+  m_data->quads.clear();
 
   m_arrayBuf.create();
   m_indexBuf.create();
 
   m_arrayBuf.bind();
-  m_arrayBuf.allocate(vertices, sizeof(vertices));
+  m_arrayBuf.allocate(
+      m_data->vertices.data(),
+      (int)m_data->vertices.size() * sizeof(Geometry::Vertex_t));
 
   m_indexBuf.bind();
-  m_indexBuf.allocate(indices, sizeof(indices));
+  m_indexBuf.allocate(m_data->tris.data(),
+                      (int)m_data->tris.size() * sizeof(Geometry::Index_t));
 
-  m_numberIndices = sizeof(indices) / sizeof(GLuint);
+  m_numberIndices = (int)m_data->tris.size();
 }
 
 bool DisplayObject::isInitialized() const
 {
-  return m_numberIndices > 0 && m_arrayBuf.isCreated() &&
+  return m_data && m_numberIndices > 0 && m_arrayBuf.isCreated() &&
          m_indexBuf.isCreated();
 }

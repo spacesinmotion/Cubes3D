@@ -3,7 +3,8 @@
 
 #include <QMainWindow>
 
-namespace Ui {
+namespace Ui
+{
 class Cubes3D;
 }
 
@@ -16,7 +17,10 @@ public:
   ~Cubes3D();
 
 private:
+  void closeEvent(QCloseEvent *e);
+
+private:
   Ui::Cubes3D *ui;
 };
 
-#endif // CUBES3D_H
+#endif  // CUBES3D_H

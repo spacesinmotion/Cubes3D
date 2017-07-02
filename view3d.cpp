@@ -28,19 +28,14 @@ void View3D::initializeGL()
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_CULL_FACE);
-  glEnable(GL_NORMALIZE);
-  // glShadeModel(GL_SMOOTH);
-  glEnable(GL_TEXTURE_2D);
-  glEnable(GL_LIGHT0);
-  glEnable(GL_LIGHTING);
-  glEnable(GL_COLOR_MATERIAL);
+  glEnable(GL_CULL_FACE);
 
   glPolygonOffset(0.5, 10.0);
 
   m_cam.setViewCenter(slm::vec3(0, 0, -1));
 
-  m_cubeDisplay = new DisplayObject("dummy");
+  m_cubeDisplay = new DisplayObject(
+      "D:/home/marco/develop/graphics/Cubes3D/assets/crystal.ply");
 
   startTimer(20);
 }
