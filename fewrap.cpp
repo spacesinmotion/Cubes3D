@@ -1,6 +1,6 @@
 #include "fewrap.h"
 
-#include <typeindex>
+#include <QDebug>
 
 #include "renderobject.h"
 
@@ -174,7 +174,7 @@ std::unique_ptr<RenderObject> FeWrap::eval(const QString &fe, const std::functio
     fe_restoregc(m_fe, gc);
   }
 
-  return group;
+  return std::move(group);
 }
 
 static void format_(fe_Context *ctx, fe_Object *o, QString &out, const QString &pre = {}, const QString &ind = {})
@@ -186,13 +186,22 @@ static void format_(fe_Context *ctx, fe_Object *o, QString &out, const QString &
   }
 
   QString start = "(";
+  QString end = ")";
+  QString nPre = " ";
+
   if (!fe_isnil(ctx, o))
   {
     auto *fn = fe_nextarg(ctx, &o);
     if (fe_type(ctx, fn) == FE_TSYMBOL)
     {
       const auto sym = from_string(ctx, fn);
-      if (sym != "vec3" && sym != "color")
+      if (sym == "quote")
+      {
+        start = pre + "'";
+        end = "";
+        nPre = "";
+      }
+      else if (sym != "vec3" && sym != "color")
         start = (pre.isEmpty() ? "" : "\n") + ind + "(" + sym;
       else
         start = pre + "(" + sym;
@@ -202,8 +211,8 @@ static void format_(fe_Context *ctx, fe_Object *o, QString &out, const QString &
   }
   out += start;
   while (!fe_isnil(ctx, o))
-    format_(ctx, fe_nextarg(ctx, &o), out, " ", ind + "  ");
-  out += ")";
+    format_(ctx, fe_nextarg(ctx, &o), out, nPre, ind + "  ");
+  out += end;
 }
 
 QString FeWrap::format(const QString &fe)
