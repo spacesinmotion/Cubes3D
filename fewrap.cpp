@@ -80,8 +80,9 @@ fe_Object *create_custom(fe_Context *ctx, Args &&...args)
 template <CustomPtr::Type t>
 static bool is(fe_Context *ctx, fe_Object *o)
 {
-  if (auto *p = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)))
-    return p->type == t;
+  if (fe_type(ctx, o) == FE_TPTR)
+    if (auto *p = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)))
+      return p->type == t;
   return false;
 }
 
@@ -104,7 +105,7 @@ static QColor _color(fe_Context *ctx, fe_Object *o)
 static RenderObject *_obj(fe_Context *ctx, fe_Object *o)
 {
   if (!is<CustomPtr::Object>(ctx, o))
-    fe_error(ctx, "Expect color!");
+    fe_error(ctx, "Expect RenderObject!");
 
   return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.obj;
 }
@@ -112,7 +113,7 @@ static RenderObject *_obj(fe_Context *ctx, fe_Object *o)
 static std::unique_ptr<RenderObject> _uobj(fe_Context *ctx, fe_Object *o)
 {
   if (!is<CustomPtr::Object>(ctx, o))
-    fe_error(ctx, "Expect color!");
+    fe_error(ctx, "Expect RenderObject!");
 
   auto *custom = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
   if (custom->moved)
@@ -168,8 +169,9 @@ std::unique_ptr<RenderObject> FeWrap::eval(const QString &fe, const std::functio
     auto *o = fe_eval(m_fe, r);
     if (out)
       out(from_string(m_fe, o));
-    if (auto rp = _uobj(m_fe, o))
-      group->add(std::move(rp));
+    if (is<CustomPtr::Object>(m_fe, o))
+      if (auto rp = _uobj(m_fe, o))
+        group->add(std::move(rp));
 
     fe_restoregc(m_fe, gc);
   }
@@ -177,42 +179,64 @@ std::unique_ptr<RenderObject> FeWrap::eval(const QString &fe, const std::functio
   return std::move(group);
 }
 
-static void format_(fe_Context *ctx, fe_Object *o, QString &out, const QString &pre = {}, const QString &ind = {})
+static bool format_need_break(fe_Context *ctx, fe_Object *o)
 {
+  if (fe_type(ctx, o) == FE_TPAIR)
+  {
+    auto *a = fe_nextarg(ctx, &o);
+    if (fe_type(ctx, a) == FE_TSYMBOL)
+    {
+      char buffer[256] = {0};
+      fe_tostring(ctx, a, buffer, 255);
+      for (const auto *key : {"vec3", "color", "fn", "mac", "=", "+", "-", "*", "/"})
+        if (strcmp(buffer, key) == 0)
+          return false;
+    }
+    return true;
+  }
+  return false;
+}
+
+static int format_force_no_break(fe_Context *ctx, fe_Object *o)
+{
+  if (fe_type(ctx, o) == FE_TPAIR)
+  {
+    auto *a = fe_nextarg(ctx, &o);
+    if (fe_type(ctx, a) == FE_TSYMBOL)
+    {
+      char buffer[256] = {0};
+      fe_tostring(ctx, a, buffer, 255);
+      for (const auto *key : {"fn", "=", "mac"})
+        if (strcmp(buffer, key) == 0)
+          return 2;
+    }
+  }
+  return 0;
+}
+
+static void format__(fe_Context *ctx, fe_Object *o, QString &out, bool force_no_break = false, QString ind = "  ")
+{
+  if (!out.isEmpty() && out.back() != '(' && out.back() != '\n')
+    out += " ";
   if (fe_type(ctx, o) != FE_TPAIR)
   {
-    out += pre + from_string(ctx, o);
+    out += from_string(ctx, o);
     return;
   }
 
-  QString start = "(";
-  QString end = ")";
-  QString nPre = " ";
-
-  if (!fe_isnil(ctx, o))
+  if (!force_no_break && !out.isEmpty() && out.back() != '\n' && format_need_break(ctx, o))
   {
-    auto *fn = fe_nextarg(ctx, &o);
-    if (fe_type(ctx, fn) == FE_TSYMBOL)
-    {
-      const auto sym = from_string(ctx, fn);
-      if (sym == "quote")
-      {
-        start = pre + "'";
-        end = "";
-        nPre = "";
-      }
-      else if (sym != "vec3" && sym != "color")
-        start = (pre.isEmpty() ? "" : "\n") + ind + "(" + sym;
-      else
-        start = pre + "(" + sym;
-    }
-    else
-      start = pre + "(" + from_string(ctx, fn);
+    out += "\n" + ind;
+    ind += "  ";
   }
-  out += start;
+  out += "(";
+  int no_break = format_force_no_break(ctx, o);
   while (!fe_isnil(ctx, o))
-    format_(ctx, fe_nextarg(ctx, &o), out, nPre, ind + "  ");
-  out += end;
+  {
+    format__(ctx, fe_nextarg(ctx, &o), out, no_break > 0, ind);
+    no_break--;
+  }
+  out += ")";
 }
 
 QString FeWrap::format(const QString &fe)
@@ -232,7 +256,7 @@ QString FeWrap::format(const QString &fe)
       break;
 
     made += br;
-    format_(m_fe, r, made);
+    format__(m_fe, r, made);
     br = "\n\n";
 
     fe_restoregc(m_fe, gc);
