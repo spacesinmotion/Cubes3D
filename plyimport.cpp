@@ -8,7 +8,8 @@
 plyImport::plyImport(const char *plyFile) : m_file(nullptr)
 {
   m_file = ply_open(plyFile, 0, 0, 0);
-  if (m_file && !ply_read_header(m_file)) {
+  if (m_file && !ply_read_header(m_file))
+  {
     assert(false);
     ply_close(m_file);
     m_file = nullptr;
@@ -42,8 +43,7 @@ Geometry::Vertex_t &vertex__cb_base(p_ply_argument argument, bool push = false)
 
 int x__cb(p_ply_argument argument)
 {
-  vertex__cb_base(argument, true).vert[0] =
-      (float)ply_get_argument_value(argument);
+  vertex__cb_base(argument, true).vert[0] = (float)ply_get_argument_value(argument);
   return 1;
 }
 int y__cb(p_ply_argument argument)
@@ -90,9 +90,12 @@ int face__cb(p_ply_argument argument)
   long length, value_index;
   ply_get_argument_property(argument, NULL, &length, &value_index);
 
-  if (length == 3 && value_index >= 0 && value_index < 3) {
+  if (length == 3 && value_index >= 0 && value_index < 3)
+  {
     geometry->tris.push_back((unsigned int)ply_get_argument_value(argument));
-  } else if (length == 4 && value_index >= 0 && value_index < 4) {
+  }
+  else if (length == 4 && value_index >= 0 && value_index < 4)
+  {
     geometry->quads.push_back((unsigned int)ply_get_argument_value(argument));
   }
 
@@ -102,12 +105,11 @@ int face__cb(p_ply_argument argument)
 GeometryPtr plyImport::read()
 {
   if (!isValid())
-    return false;
+    return nullptr;
 
   auto geometry = std::make_unique<Geometry>();
 
-  const auto nbVertices =
-      ply_set_read_cb(m_file, "vertex", "x", x__cb, geometry.get(), 0);
+  const auto nbVertices = ply_set_read_cb(m_file, "vertex", "x", x__cb, geometry.get(), 0);
   ply_set_read_cb(m_file, "vertex", "y", y__cb, geometry.get(), 0);
   ply_set_read_cb(m_file, "vertex", "z", z__cb, geometry.get(), 0);
   ply_set_read_cb(m_file, "vertex", "nx", nx__cb, geometry.get(), 0);
@@ -116,8 +118,7 @@ GeometryPtr plyImport::read()
   ply_set_read_cb(m_file, "vertex", "s", tx__cb, geometry.get(), 0);
   ply_set_read_cb(m_file, "vertex", "t", ty__cb, geometry.get(), 0);
 
-  const auto nbFaces = ply_set_read_cb(m_file, "face", "vertex_indices",
-                                       face__cb, geometry.get(), 0);
+  const auto nbFaces = ply_set_read_cb(m_file, "face", "vertex_indices", face__cb, geometry.get(), 0);
 
   geometry->vertices.reserve(nbVertices * 3);
   geometry->tris.reserve(nbFaces * 3);

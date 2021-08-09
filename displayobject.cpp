@@ -1,4 +1,4 @@
-#include "dispayobject.h"
+#include "displayobject.h"
 #include "plyimport.h"
 
 #include <QOpenGLShaderProgram>
@@ -35,7 +35,7 @@ void DisplayObject::draw(QOpenGLShaderProgram &program)
   program.enableAttributeArray(vertexLocation);
   program.enableAttributeArray(normalLocation);
 
-  quintptr offset = 0;
+  int offset = 0;
   program.setAttributeBuffer(vertexLocation, GL_FLOAT, offset, 3,
                              sizeof(GLfloat[6]));
   offset += sizeof(GLfloat[3]);
@@ -43,14 +43,20 @@ void DisplayObject::draw(QOpenGLShaderProgram &program)
   program.setAttributeBuffer(normalLocation, GL_FLOAT, offset, 3,
                              sizeof(GLfloat[6]));
 
-  glDrawElements(GL_TRIANGLES, m_numberIndices, GL_UNSIGNED_INT, 0);
+  glDrawElements(GL_TRIANGLES, m_numberIndices, GL_UNSIGNED_INT, nullptr);
+
+  program.disableAttributeArray(vertexLocation);
+  program.disableAttributeArray(normalLocation);
+
+  m_indexBuf.release();
+  m_arrayBuf.release();
 }
 
 void DisplayObject::init()
 {
   m_data = plyImport(qPrintable(m_filename)).read();
 
-  for (int i = 0; i < m_data->quads.size(); i += 4) {
+  for (std::size_t i = 0; i < m_data->quads.size(); i += 4) {
     m_data->tris.push_back(m_data->quads[i + 0]);
     m_data->tris.push_back(m_data->quads[i + 1]);
     m_data->tris.push_back(m_data->quads[i + 2]);
@@ -67,7 +73,7 @@ void DisplayObject::init()
   m_arrayBuf.bind();
   m_arrayBuf.allocate(
       m_data->vertices.data(),
-      (int)m_data->vertices.size() * sizeof(Geometry::Vertex_t));
+      int(m_data->vertices.size() * sizeof(Geometry::Vertex_t)));
 
   m_indexBuf.bind();
   m_indexBuf.allocate(m_data->tris.data(),

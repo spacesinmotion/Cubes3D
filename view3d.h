@@ -1,42 +1,54 @@
 #ifndef VIEW3D_H
 #define VIEW3D_H
 
-#include "camera.h"
-
-#include <memory>
-
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
+#include <memory>
+
+#include "camera.h"
+#include "displayobject.h"
+#include "renderobject.h"
 
 class DisplayObject;
+class OverlayObject;
 class Ray;
 
-class View3D : public QOpenGLWidget, protected QOpenGLFunctions
+class View3D
+  : public QOpenGLWidget
+  , public PrimitiveProvider
+  , protected QOpenGLFunctions
 {
 public:
   explicit View3D(QWidget *parent = nullptr);
   ~View3D();
 
+  void loadFile(const QString &f);
+  void showScene(std::unique_ptr<RenderObject> scene);
+
   slm::vec3 mouseInSpace(const QPoint &mp);
 
-protected:  // override
-  void initializeGL() override;
-  void paintGL() override;
-  void resizeGL(int width, int height) override;
+  SharedDisplayObject loadObject(const QString &path);
+  SharedDisplayObject cube() final;
 
-  void keyPressEvent(QKeyEvent *ke) override;
-  void keyReleaseEvent(QKeyEvent *ke) override;
+protected:
+  void initializeGL() final;
+  void paintGL() final;
+  void resizeGL(int width, int height) final;
 
-  void mousePressEvent(QMouseEvent *me) override;
-  void mouseReleaseEvent(QMouseEvent *me) override;
-  void mouseMoveEvent(QMouseEvent *me) override;
-  void wheelEvent(QWheelEvent *we) override;
+  void keyPressEvent(QKeyEvent *ke) final;
+  void keyReleaseEvent(QKeyEvent *ke) final;
 
-  void timerEvent(QTimerEvent *te);
+  void mousePressEvent(QMouseEvent *me) final;
+  void mouseReleaseEvent(QMouseEvent *me) final;
+  void mouseMoveEvent(QMouseEvent *me) final;
+  void wheelEvent(QWheelEvent *we) final;
+
+  void timerEvent(QTimerEvent *te) final;
 
 private:  // helper
   void drawObjects();
+  void drawLine(const QColor &c, const std::vector<slm::vec3> &l);
 
   void initShaders();
 
@@ -52,9 +64,10 @@ private:  // data
   Camera m_cam;
   QPoint m_lastPos;
 
-  DisplayObject *m_cubeDisplay;
-
   QOpenGLShaderProgram m_program;
+
+  QHash<QString, WeakDisplayObject> m_displayObjects;
+  std::unique_ptr<RenderObject> m_scene;
 };
 
 #endif  // VIEW3D_H

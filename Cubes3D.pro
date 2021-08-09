@@ -14,6 +14,9 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         cubes3d.cpp \
+  fe/fe.c \
+  fesyntaxhighlighter.cpp \
+  fewrap.cpp \
     view3d.cpp \
     camera.cpp \
     aabb.cpp \
@@ -36,12 +39,19 @@ SOURCES += main.cpp\
     slm/vec3.inl \
     slm/vec4.cpp \
     slm/vec4.inl \
-    dispayobject.cpp \
     rply/rply.c \
     plyimport.cpp \
-    geometry.cpp
+    geometry.cpp \
+    renderobject.cpp \
+    displayobject.cpp \
+    overlaypainter.cpp \
+    overlay/overlayobject.cpp \
+    overlay/mainmenubutton.cpp
 
 HEADERS  += cubes3d.h \
+    fe/fe.h \
+    fesyntaxhighlighter.h \
+    fewrap.h \
     view3d.h \
     camera.h \
     aabb.h \
@@ -63,14 +73,23 @@ HEADERS  += cubes3d.h \
     slm/vec3.h \
     slm/vec4.h \
     slm/vector_simd.h \
-    dispayobject.h \
     rply/rply.h \
     plyimport.h \
-    geometry.h
+    geometry.h \
+    renderobject.h \
+    displayobject.h \
+    overlaypainter.h \
+    overlay/overlayobject.h \
+    overlay/mainmenubutton.h
 
 FORMS    += cubes3d.ui
 
 DISTFILES += \
+    assets/crystal.ply \
+    assets/cube.ply \
+    assets/example.json \
     shader/vshader.glsl \
     shader/fshader.glsl \
-    .gitignore
+    .gitignore \
+    shader/overlay.vert \
+    shader/overlay.frag

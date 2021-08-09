@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 
+#include "fewrap.h"
+
 namespace Ui
 {
 class Cubes3D;
@@ -16,11 +18,23 @@ public:
   explicit Cubes3D(QWidget *parent = 0);
   ~Cubes3D();
 
+  bool eval_text(const QString &t);
+  void open_file(const QString &t);
+
+private slots:
+  void on_actionopen_triggered();
+  void on_actionsave_triggered();
+
 private:
   void closeEvent(QCloseEvent *e);
 
+  void highlightBraces();
+
 private:
   Ui::Cubes3D *ui;
+
+  QString m_feFile;
+  FeWrap m_feWrap;
 };
 
 #endif  // CUBES3D_H

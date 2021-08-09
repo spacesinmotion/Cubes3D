@@ -4,19 +4,19 @@ precision mediump int;
 precision mediump float;
 #endif
 
-uniform mat4 mvp_matrix;
-uniform mat4 normal_matrix;
+uniform mat4 projection;
+uniform mat4 model_view;
+uniform mat4 object_transformation = mat4(1.0);
 
 attribute vec3 a_position;
-attribute vec3 a_color;
 attribute vec3 a_normal;
 
-varying vec3 vertex;
+varying vec4 vertex;
 varying vec4 normal;
 
 void main()
 {
-  gl_Position = mvp_matrix * vec4(a_position, 1);
-  vertex = gl_Position.xyz;
-  normal = (normal_matrix * vec4(a_normal, 0.0));
+  vertex =  model_view * object_transformation * vec4(a_position, 1.0);
+  gl_Position = projection * vertex;
+  normal = transpose(inverse(model_view)) * vec4(a_normal, 0.0);
 }

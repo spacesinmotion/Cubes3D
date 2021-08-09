@@ -12,7 +12,7 @@ class QOpenGLShaderProgram;
 class DisplayObject : protected QOpenGLFunctions
 {
 public:
-  DisplayObject(const QString &filename);
+  explicit DisplayObject(const QString &filename);
   ~DisplayObject();
 
   void draw(QOpenGLShaderProgram &program);
@@ -31,5 +31,9 @@ private:  // data
 
   GeometryPtr m_data;
 };
+
+using WeakDisplayObject = std::weak_ptr<DisplayObject>;
+using SharedDisplayObject = std::shared_ptr<DisplayObject>;
+using UniqueDisplayObject = std::weak_ptr<DisplayObject>;
 
 #endif  // DISPAYOBJECT_H
