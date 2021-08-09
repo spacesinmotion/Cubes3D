@@ -216,10 +216,12 @@ static int format_force_no_break(fe_Context *ctx, fe_Object *o)
 
 static void format__(fe_Context *ctx, fe_Object *o, QString &out, bool force_no_break = false, QString ind = "  ")
 {
-  if (!out.isEmpty() && out.back() != '(' && out.back() != '\n')
-    out += " ";
+  bool need_space = (!out.isEmpty() && out.back() != '(' && out.back() != '\n');
+
   if (fe_type(ctx, o) != FE_TPAIR)
   {
+    if (need_space)
+      out += " ";
     out += from_string(ctx, o);
     return;
   }
@@ -229,6 +231,8 @@ static void format__(fe_Context *ctx, fe_Object *o, QString &out, bool force_no_
     out += "\n" + ind;
     ind += "  ";
   }
+  else if (need_space)
+    out += " ";
   out += "(";
   int no_break = format_force_no_break(ctx, o);
   while (!fe_isnil(ctx, o))
