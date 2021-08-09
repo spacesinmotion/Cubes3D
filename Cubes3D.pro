@@ -87,7 +87,7 @@ FORMS    += cubes3d.ui
 DISTFILES += \
     assets/crystal.ply \
     assets/cube.ply \
-    assets/example.json \
+    assets/example.fe \
     shader/vshader.glsl \
     shader/fshader.glsl \
     .gitignore \

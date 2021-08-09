@@ -1,0 +1,11 @@
+(rotate 45 (vec3 0 0 1)
+  (translate (vec3 0 0.5 1)
+    (cube (vec3 0.25 0.5 0.25) (color 44 243 14)))
+  (translate (vec3 0 0 2)
+    (cube (vec3 0.25 0.5 0.25) (color 44 43 139))
+    (cube (vec3 0.5 0.25 0.25) (color 44 43 139)))
+  (translate (vec3 0 0 3)
+    (cube (vec3 0.25 0.5 0.25) (color 154 43 119))))
+
+(scale 2.4
+  (cube (vec3 0.25 0.5 0.25) (color 154 43 119 150)))
