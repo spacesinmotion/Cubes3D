@@ -1,12 +1,7 @@
 #include "view3d.h"
 
-#include <overlay/mainmenubutton.h>
-
 #include <QApplication>
 #include <QDebug>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QLineEdit>
 #include <QMouseEvent>
 #include <QPainter>
 
@@ -21,22 +16,6 @@ View3D::View3D(QWidget *parent) : QOpenGLWidget(parent), m_needPick(false)
 }
 
 View3D::~View3D() = default;
-
-void View3D::loadFile(const QString &f)
-{
-  QFile fi(f);
-  if (fi.open(QFile::ReadOnly))
-  {
-    const auto d = QJsonDocument::fromJson(fi.readAll());
-    if (!d.isEmpty())
-    {
-      m_scene = RenderObject::from(d.object());
-      return;
-    }
-  }
-
-  qWarning("Can't open file '%s'", qPrintable(f));
-}
 
 void View3D::showScene(std::unique_ptr<RenderObject> scene)
 {
@@ -58,16 +37,6 @@ void View3D::initializeGL()
   glPolygonOffset(0.5, 10.0);
 
   m_cam.setViewCenter(slm::vec3(0, 0, 2));
-
-  const auto o = QJsonDocument::fromJson(R"({
-                                        "translate" : [0,0,1],
-                                         "children" : [
-                                         {"cube" : [0.5,0.5,0.75], "color": "#df2040"}
-                                         ]
-                          })")
-                     .object();
-
-  m_scene = RenderObject::from(o);
 
   startTimer(16);
 }

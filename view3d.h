@@ -23,7 +23,6 @@ public:
   explicit View3D(QWidget *parent = nullptr);
   ~View3D();
 
-  void loadFile(const QString &f);
   void showScene(std::unique_ptr<RenderObject> scene);
 
   slm::vec3 mouseInSpace(const QPoint &mp);
