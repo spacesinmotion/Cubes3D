@@ -334,8 +334,9 @@ fe_Object *FeWrap::rotateZ(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::scale(fe_Context *ctx, fe_Object *arg)
 {
-  auto t = _vec3(ctx, fe_nextarg(ctx, &arg));
-  auto c = std::make_unique<ScaleContainer>(t);
+  auto *a1 = fe_nextarg(ctx, &arg);
+  auto c = std::make_unique<ScaleContainer>((fe_type(ctx, a1) == FE_TNUMBER) ? slm::vec3(fe_tonumber(ctx, a1))
+                                                                             : _vec3(ctx, a1));
 
   add_all(*c, ctx, &arg);
 
