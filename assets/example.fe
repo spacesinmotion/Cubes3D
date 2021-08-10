@@ -14,7 +14,7 @@
     (translate (vec3 0 0 -0.4)
       (cube (vec3 0.16 0.16 0.4) (color 44 143 39))))))
 
-(add
+(show
   (translate (vec3 0 0 2.05)
     (head 0))
   (translate (vec3 0 0 1.2)
@@ -29,5 +29,4 @@
       (leg 3))
     (translate (vec3 -0.185 0 0)
       (leg -2)))
-(cube (vec3 1 1 0.01) (color 200 200 200)))
-
+  (cube (vec3 1 1 0.01) (color 200 200 200)))

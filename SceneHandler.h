@@ -11,7 +11,7 @@ public:
   virtual ~SceneHandler() = default;
 
   virtual void clear_scene() = 0;
-  virtual void add_to_scene(std::unique_ptr<RenderObject>) = 0;
+  virtual void show_in_scene(std::unique_ptr<RenderObject>) = 0;
 };
 
 #endif  // SCENEHANDLER_H

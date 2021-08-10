@@ -338,12 +338,22 @@ void FeWrap::add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg)
     c.add(_uobj(ctx, fe_nextarg(ctx, arg)));
 }
 
-fe_Object *FeWrap::add(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::clear(fe_Context *ctx, fe_Object *arg)
+{
+  if (!fe_isnil(ctx, arg))
+    fe_error(ctx, "to many arguments for 'clear'");
+
+  _scene(ctx)->clear_scene();
+
+  return fe_bool(ctx, false);
+}
+
+fe_Object *FeWrap::show(fe_Context *ctx, fe_Object *arg)
 {
   auto *sh = _scene(ctx);
 
   while (!fe_isnil(ctx, arg))
-    sh->add_to_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
+    sh->show_in_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
 
   return fe_bool(ctx, false);
 }
@@ -445,7 +455,8 @@ void FeWrap::init_fn(fe_Context *ctx)
   fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, cube));
   fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, group));
 
-  fe_set(ctx, fe_symbol(ctx, "add"), fe_cfunc(ctx, add));
+  fe_set(ctx, fe_symbol(ctx, "clear"), fe_cfunc(ctx, clear));
+  fe_set(ctx, fe_symbol(ctx, "show"), fe_cfunc(ctx, show));
 
   fe_set(ctx, fe_symbol(ctx, "translate"), fe_cfunc(ctx, translate));
   fe_set(ctx, fe_symbol(ctx, "rotate"), fe_cfunc(ctx, rotate));

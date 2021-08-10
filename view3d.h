@@ -33,7 +33,7 @@ public:
   SharedDisplayObject cube() final;
 
   void clear_scene() final;
-  void add_to_scene(std::unique_ptr<RenderObject>) final;
+  void show_in_scene(std::unique_ptr<RenderObject>) final;
 
 protected:
   void initializeGL() final;

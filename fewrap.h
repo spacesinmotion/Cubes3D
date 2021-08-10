@@ -32,7 +32,8 @@ private:
 
   static void add_all(RenderContainer& c, fe_Context* ctx, fe_Object** arg);
 
-  static fe_Object* add(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* clear(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* show(fe_Context* ctx, fe_Object* arg);
 
   static fe_Object* group(fe_Context* ctx, fe_Object* arg);
   static fe_Object* translate(fe_Context* ctx, fe_Object* arg);

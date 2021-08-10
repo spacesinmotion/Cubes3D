@@ -109,7 +109,7 @@ void View3D::clear_scene()
   m_scene = std::make_unique<RenderContainer>();
 }
 
-void View3D::add_to_scene(std::unique_ptr<RenderObject> ro)
+void View3D::show_in_scene(std::unique_ptr<RenderObject> ro)
 {
   m_scene->add(std::move(ro));
 }
@@ -135,7 +135,7 @@ void View3D::mouseMoveEvent(QMouseEvent *me)
 
 void View3D::wheelEvent(QWheelEvent *we)
 {
-  m_cam.zoomEvent(slm::vec2(0.0f, float(we->delta())));
+  m_cam.zoomEvent(slm::vec2(0.0f, -float(we->delta())));
   QOpenGLWidget::wheelEvent(we);
 }
 
