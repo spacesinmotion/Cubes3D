@@ -10,7 +10,6 @@ typedef struct fe_Context fe_Context;
 
 class RenderObject;
 class RenderContainer;
-
 class SceneHandler;
 
 class FeWrap

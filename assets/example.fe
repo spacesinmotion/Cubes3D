@@ -28,6 +28,6 @@
     (translate (vec3 0.185 0 0)
       (leg 3))
     (translate (vec3 -0.185 0 0)
-      (leg -2))))
+      (leg -2)))
+(cube (vec3 1 1 0.01) (color 200 200 200)))
 
-(cube (vec3 1 1 0.01) (color 200 200 200))
