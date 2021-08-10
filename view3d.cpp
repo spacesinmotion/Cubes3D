@@ -17,7 +17,7 @@ View3D::View3D(QWidget *parent) : QOpenGLWidget(parent), m_needPick(false)
 
 View3D::~View3D() = default;
 
-void View3D::showScene(std::unique_ptr<RenderObject> scene)
+void View3D::showScene(std::unique_ptr<RenderContainer> scene)
 {
   m_scene = std::move(scene);
 }
@@ -102,6 +102,16 @@ SharedDisplayObject View3D::loadObject(const QString &path)
 SharedDisplayObject View3D::cube()
 {
   return loadObject("assets/cube.ply");
+}
+
+void View3D::clear_scene()
+{
+  m_scene = std::make_unique<RenderContainer>();
+}
+
+void View3D::add_to_scene(std::unique_ptr<RenderObject> ro)
+{
+  m_scene->add(std::move(ro));
 }
 
 void View3D::mousePressEvent(QMouseEvent *) {}

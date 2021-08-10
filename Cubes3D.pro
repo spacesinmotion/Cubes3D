@@ -49,6 +49,7 @@ SOURCES += main.cpp\
     overlay/mainmenubutton.cpp
 
 HEADERS  += cubes3d.h \
+    SceneHandler.h \
     fe/fe.h \
     fesyntaxhighlighter.h \
     fewrap.h \

@@ -11,6 +11,8 @@ typedef struct fe_Context fe_Context;
 class RenderObject;
 class RenderContainer;
 
+class SceneHandler;
+
 class FeWrap
 {
 public:
@@ -19,7 +21,7 @@ public:
 
   void load(const QString& f);
 
-  std::unique_ptr<RenderObject> eval(const QString& fe, const std::function<void(const QString&)>& out);
+  QString eval(const QString& fe, SceneHandler& sh);
 
   QString format(const QString& fe);
 
@@ -30,6 +32,8 @@ private:
   static fe_Object* cube(fe_Context* ctx, fe_Object* arg);
 
   static void add_all(RenderContainer& c, fe_Context* ctx, fe_Object** arg);
+
+  static fe_Object* add(fe_Context* ctx, fe_Object* arg);
 
   static fe_Object* group(fe_Context* ctx, fe_Object* arg);
   static fe_Object* translate(fe_Context* ctx, fe_Object* arg);

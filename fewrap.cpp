@@ -2,6 +2,7 @@
 
 #include <QDebug>
 
+#include "SceneHandler.h"
 #include "renderobject.h"
 
 extern "C" {
@@ -15,13 +16,15 @@ struct CustomPtr
     RenderObject *obj;
     slm::vec3 vec;
     QColor col;
+    SceneHandler *sh;
   } d{nullptr};
 
   enum Type
   {
     Object,
     Vec3,
-    Color
+    Color,
+    Scene,
   };
   Type type{Object};
 
@@ -71,6 +74,14 @@ fe_Object *custom(fe_Context *ctx, RenderObject *o)
   return fe_ptr(ctx, wrap);
 }
 
+fe_Object *custom(fe_Context *ctx, SceneHandler *s)
+{
+  auto *wrap = new CustomPtr{};
+  wrap->type = CustomPtr::Scene;
+  wrap->d.sh = s;
+  return fe_ptr(ctx, wrap);
+}
+
 template <typename T, typename... Args>
 fe_Object *create_custom(fe_Context *ctx, Args &&...args)
 {
@@ -108,6 +119,19 @@ static RenderObject *_obj(fe_Context *ctx, fe_Object *o)
     fe_error(ctx, "Expect RenderObject!");
 
   return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.obj;
+}
+
+static SceneHandler *_scene(fe_Context *ctx, fe_Object *o)
+{
+  if (!is<CustomPtr::Scene>(ctx, o))
+    fe_error(ctx, "Expect Scene!");
+
+  return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.sh;
+}
+
+static SceneHandler *_scene(fe_Context *ctx)
+{
+  return _scene(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
 }
 
 static std::unique_ptr<RenderObject> _uobj(fe_Context *ctx, fe_Object *o)
@@ -152,14 +176,18 @@ void FeWrap::load(const QString &f)
   fclose(fp);
 }
 
-std::unique_ptr<RenderObject> FeWrap::eval(const QString &fe, const std::function<void(const QString &)> &out)
+QString FeWrap::eval(const QString &fe, SceneHandler &sh)
 {
   const auto fet = fe.toLocal8Bit();
   auto it = fet.begin();
 
-  int gc = fe_savegc(m_fe);
+  sh.clear_scene();
 
-  auto group = std::make_unique<RenderContainer>();
+  fe_set(m_fe, fe_symbol(m_fe, "scene"), custom(m_fe, &sh));
+
+  int gc = fe_savegc(m_fe);
+  QString last_text;
+
   for (;;)
   {
     auto *r = fe_read(m_fe, read_fn, &it);
@@ -167,16 +195,14 @@ std::unique_ptr<RenderObject> FeWrap::eval(const QString &fe, const std::functio
       break;
 
     auto *o = fe_eval(m_fe, r);
-    if (out)
-      out(from_string(m_fe, o));
-    if (is<CustomPtr::Object>(m_fe, o))
-      if (auto rp = _uobj(m_fe, o))
-        group->add(std::move(rp));
+    last_text = from_string(m_fe, o);
 
     fe_restoregc(m_fe, gc);
   }
 
-  return std::move(group);
+  fe_set(m_fe, fe_symbol(m_fe, "scene"), nullptr);
+
+  return last_text;
 }
 
 static bool format_need_break(fe_Context *ctx, fe_Object *o)
@@ -312,6 +338,16 @@ void FeWrap::add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg)
     c.add(_uobj(ctx, fe_nextarg(ctx, arg)));
 }
 
+fe_Object *FeWrap::add(fe_Context *ctx, fe_Object *arg)
+{
+  auto *sh = _scene(ctx);
+
+  while (!fe_isnil(ctx, arg))
+    sh->add_to_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
+
+  return fe_bool(ctx, false);
+}
+
 fe_Object *FeWrap::group(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<RenderContainer>();
@@ -408,6 +444,8 @@ void FeWrap::init_fn(fe_Context *ctx)
 
   fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, cube));
   fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, group));
+
+  fe_set(ctx, fe_symbol(ctx, "add"), fe_cfunc(ctx, add));
 
   fe_set(ctx, fe_symbol(ctx, "translate"), fe_cfunc(ctx, translate));
   fe_set(ctx, fe_symbol(ctx, "rotate"), fe_cfunc(ctx, rotate));

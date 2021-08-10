@@ -6,6 +6,7 @@
 #include <QOpenGLWidget>
 #include <memory>
 
+#include "SceneHandler.h"
 #include "camera.h"
 #include "displayobject.h"
 #include "renderobject.h"
@@ -17,18 +18,22 @@ class Ray;
 class View3D
   : public QOpenGLWidget
   , public PrimitiveProvider
+  , public SceneHandler
   , protected QOpenGLFunctions
 {
 public:
   explicit View3D(QWidget *parent = nullptr);
   ~View3D();
 
-  void showScene(std::unique_ptr<RenderObject> scene);
+  void showScene(std::unique_ptr<RenderContainer> scene);
 
   slm::vec3 mouseInSpace(const QPoint &mp);
 
   SharedDisplayObject loadObject(const QString &path);
   SharedDisplayObject cube() final;
+
+  void clear_scene() final;
+  void add_to_scene(std::unique_ptr<RenderObject>) final;
 
 protected:
   void initializeGL() final;
@@ -66,7 +71,7 @@ private:  // data
   QOpenGLShaderProgram m_program;
 
   QHash<QString, WeakDisplayObject> m_displayObjects;
-  std::unique_ptr<RenderObject> m_scene;
+  std::unique_ptr<RenderContainer> m_scene;
 };
 
 #endif  // VIEW3D_H

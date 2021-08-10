@@ -128,14 +128,11 @@ bool Cubes3D::eval_text(const QString &t)
   bool ok = true;
 
   ui->teFeOut->clear();
-  ui->teFeOut->setTextColor(Qt::darkBlue);
-  ui->teFeOut->append(t);
   try
   {
-    ui->view3d->showScene(m_feWrap.eval(t, [this](const auto &o) {
-      ui->teFeOut->setTextColor(Qt::black);
-      ui->teFeOut->append(o);
-    }));
+    const auto out = m_feWrap.eval(t, *ui->view3d);
+    ui->teFeOut->setTextColor(Qt::black);
+    ui->teFeOut->append(out);
   }
   catch (const std::exception &e)
   {
@@ -144,12 +141,21 @@ bool Cubes3D::eval_text(const QString &t)
     ok = false;
   }
 
-  const auto p = ui->teFeIn->textCursor().position();
-  ui->teFeIn->setText(m_feWrap.format(t));
+  try
+  {
+    const auto p = ui->teFeIn->textCursor().position();
+    ui->teFeIn->setText(m_feWrap.format(t));
 
-  auto c = ui->teFeIn->textCursor();
-  c.movePosition(c.Right, c.MoveAnchor, p);
-  ui->teFeIn->setTextCursor(c);
+    auto c = ui->teFeIn->textCursor();
+    c.movePosition(c.Right, c.MoveAnchor, p);
+    ui->teFeIn->setTextCursor(c);
+  }
+  catch (const std::runtime_error &e)
+  {
+    ui->teFeOut->setTextColor(Qt::darkRed);
+    ui->teFeOut->append(QString("FORMAT_ERROR: ") + e.what());
+    ok = false;
+  }
 
   return ok;
 }
