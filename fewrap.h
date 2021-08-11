@@ -43,6 +43,8 @@ private:
   static fe_Object* rotateZ(fe_Context* ctx, fe_Object* arg);
   static fe_Object* scale(fe_Context* ctx, fe_Object* arg);
 
+  static fe_Object* lfo(fe_Context* ctx, fe_Object* arg);
+
   static void init_fn(fe_Context* ctx);
 
 private:

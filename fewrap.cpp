@@ -426,6 +426,16 @@ fe_Object *FeWrap::scale(fe_Context *ctx, fe_Object *arg)
   return custom(ctx, c.release());
 }
 
+fe_Object *FeWrap::lfo(fe_Context *ctx, fe_Object *arg)
+{
+  //  auto *sh = _scene(ctx);
+
+  //  while (!fe_isnil(ctx, arg))
+  //    sh->show_in_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
+
+  return fe_bool(ctx, false);
+}
+
 [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
 {
   auto x = QString(err);

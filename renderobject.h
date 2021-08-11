@@ -3,8 +3,15 @@
 
 #include <QColor>
 #include <QMatrix4x4>
+#include <memory>
 
 #include "displayobject.h"
+
+using s_float = std::shared_ptr<float>;
+inline s_float shared(float f)
+{
+  return std::make_shared<float>(f);
+}
 
 class QOpenGLShaderProgram;
 
@@ -87,18 +94,20 @@ class RotateContainer : public RenderContainer
 {
 public:
   RotateContainer() = default;
-  RotateContainer(float a, const slm::vec3 &t) : m_angle{a}, m_axis{t} {}
+  RotateContainer(float a, const slm::vec3 &t) : m_angle{shared(a)}, m_axis{t} {}
+  RotateContainer(s_float a, const slm::vec3 &t) : m_angle{a}, m_axis{t} {}
 
-  void set_rotate(float a, const slm::vec3 &ax)
+  void set_rotate(s_float a, const slm::vec3 &ax)
   {
     m_angle = a;
     m_axis = ax;
   }
+  void set_rotate(float a, const slm::vec3 &ax) { set_rotate(shared(a), ax); }
 
   void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
 
 private:
-  float m_angle{0.0f};
+  s_float m_angle{shared(0.0f)};
   slm::vec3 m_axis{1.0};
 };
 
