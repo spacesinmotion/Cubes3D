@@ -13,6 +13,12 @@ inline s_float shared(float f)
   return std::make_shared<float>(f);
 }
 
+using s_vec3 = std::shared_ptr<slm::vec3>;
+inline s_vec3 shared(slm::vec3 f)
+{
+  return std::make_shared<slm::vec3>(f);
+}
+
 class QOpenGLShaderProgram;
 
 class PrimitiveProvider
@@ -80,14 +86,16 @@ class TranslateContainer : public RenderContainer
 {
 public:
   TranslateContainer() = default;
-  TranslateContainer(const slm::vec3 &t) : m_translate{t} {}
+  TranslateContainer(const s_vec3 &t) : m_translate{t} {}
+  TranslateContainer(const slm::vec3 &t) : m_translate{shared(t)} {}
 
-  void set_translate(const slm::vec3 &t) { m_translate = t; }
+  void set_translate(const s_vec3 &t) { m_translate = t; }
+  void set_translate(const slm::vec3 &t) { set_translate(shared(t)); }
 
   void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
 
 private:
-  slm::vec3 m_translate{1.0};
+  s_vec3 m_translate{shared(slm::vec3(1.0))};
 };
 
 class RotateContainer : public RenderContainer

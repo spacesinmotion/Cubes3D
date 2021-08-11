@@ -1,9 +1,11 @@
 (= body (fn (a)
-  (cube (vec3 0.4 0.25 0.5) (color 144 143 14))))
+  (translate (vec3 0 0 0)
+    (cube (vec3 0.4 0.25 0.5) (color 144 143 14)))))
 
 (= head (fn (a)
-  (rotateY a
-    (cube (vec3 0.45 0.35 0.35) (color 164 233 14)))))
+  (translate a
+    (rotateY 0
+      (cube (vec3 0.45 0.35 0.35) (color 164 233 14))))))
 
 (= arm (fn (a)
   (rotateX a
@@ -15,21 +17,23 @@
     (translate (vec3 0 0 -0.4)
       (cube (vec3 0.16 0.16 0.4) (color 44 143 39))))))
 
-(= freq 2.4)
+(= guy (fn (freq)
+  (group
+    (translate (vec3 0 0 2.05)
+      (head (lfo (vec3 0 0 0) (vec3 0 0 0.025) (* 2 freq))))
+    (translate (vec3 0 0 1.2)
+      (body freq))
+    (translate (vec3 0 0 1.575)
+      (translate (vec3 0.5 0 0)
+        (arm (lfo 5 15 freq)))
+      (translate (vec3 -0.5 0 0)
+        (arm (lfo 5 -15 freq))))
+    (translate (vec3 0 0 0.8)
+      (translate (vec3 0.185 0 0)
+        (leg (lfo -5 -25 freq)))
+      (translate (vec3 -0.185 0 0)
+        (leg (lfo -5 25 freq)))))))
 
 (show
-  (translate (vec3 0 0 2.05)
-    (head (lfo 0 1 freq)))
-  (translate (vec3 0 0 1.2)
-    (body 0))
-  (translate (vec3 0 0 1.575)
-    (translate (vec3 0.5 0 0)
-      (arm (lfo 5 15 freq)))
-    (translate (vec3 -0.5 0 0)
-      (arm (lfo 5 -15 freq))))
-  (translate (vec3 0 0 0.8)
-    (translate (vec3 0.185 0 0)
-      (leg (lfo -5 -25 freq)))
-    (translate (vec3 -0.185 0 0)
-      (leg (lfo -5 25 freq))))
+  (guy 0.5)
   (cube (vec3 1 1 0.01) (color 200 200 200)))

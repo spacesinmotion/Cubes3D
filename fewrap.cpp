@@ -13,7 +13,7 @@ extern "C" {
 using slm::vec3;
 using RenderObjectPtr = std::unique_ptr<RenderObject>;
 
-using CustomPtr = std::variant<RenderObjectPtr, s_float, vec3, QColor, SceneHandler *>;
+using CustomPtr = std::variant<RenderObjectPtr, s_float, s_vec3, vec3, QColor, SceneHandler *>;
 
 static char read_fn(fe_Context *, void *vit)
 {
@@ -73,6 +73,14 @@ static s_float s_number(fe_Context *ctx, fe_Object *o)
     return get<s_float>(ctx, o);
 
   return shared(fe_tonumber(ctx, o));
+}
+
+static s_vec3 s_vec(fe_Context *ctx, fe_Object *o)
+{
+  if (is<s_vec3>(ctx, o))
+    return get<s_vec3>(ctx, o);
+
+  return shared(get<slm::vec3>(ctx, o));
 }
 
 static SceneHandler *_scene(fe_Context *ctx)
@@ -309,7 +317,7 @@ fe_Object *FeWrap::_group(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 {
-  auto c = std::make_unique<TranslateContainer>(get<vec3>(ctx, fe_nextarg(ctx, &arg)));
+  auto c = std::make_unique<TranslateContainer>(s_vec(ctx, fe_nextarg(ctx, &arg)));
 
   add_all(*c, ctx, &arg);
 
@@ -368,12 +376,9 @@ fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
   return custom(ctx, std::move(c));
 }
 
-fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
+template <typename T>
+fe_Object *_lfo_i(fe_Context *ctx, T center, T amp, float frequency)
 {
-  const auto center = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  const auto amp = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-
   auto value = shared(center);
 
   _scene(ctx)->on_tick([value, center, amp, frequency](auto t) {
@@ -381,6 +386,23 @@ fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
   });
 
   return custom(ctx, value);
+}
+
+fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
+{
+  auto *a1 = fe_nextarg(ctx, &arg);
+  if (is<vec3>(ctx, a1))
+  {
+    const auto center = get<vec3>(ctx, a1);
+    const auto amp = get<vec3>(ctx, fe_nextarg(ctx, &arg));
+    const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+    return _lfo_i(ctx, center, amp, frequency);
+  }
+
+  const auto center = fe_tonumber(ctx, a1);
+  const auto amp = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  return _lfo_i(ctx, center, amp, frequency);
 }
 
 [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
