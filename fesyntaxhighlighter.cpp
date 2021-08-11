@@ -19,10 +19,8 @@ FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighlig
   }
 
   const QString valuePatterns[] = {
-      QStringLiteral("\\bvec3\\b"),
-      QStringLiteral("\\btrue\\b"),
-      QStringLiteral("\\bfalse\\b"),
-      QStringLiteral("\\bcolor\\b"),
+      QStringLiteral("\\bvec3\\b"),  QStringLiteral("\\blfo\\b"),   QStringLiteral("\\btrue\\b"),
+      QStringLiteral("\\bfalse\\b"), QStringLiteral("\\bcolor\\b"),
   };
   for (const QString &pattern : valuePatterns)
   {

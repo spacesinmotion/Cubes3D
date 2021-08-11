@@ -1,6 +1,7 @@
 #ifndef VIEW3D_H
 #define VIEW3D_H
 
+#include <QElapsedTimer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
@@ -34,6 +35,7 @@ public:
 
   void clear_scene() final;
   void show_in_scene(std::unique_ptr<RenderObject>) final;
+  void on_tick(const Tick &) final;
 
 protected:
   void initializeGL() final;
@@ -72,6 +74,9 @@ private:  // data
 
   QHash<QString, WeakDisplayObject> m_displayObjects;
   std::unique_ptr<RenderContainer> m_scene;
+
+  QElapsedTimer m_timer;
+  std::vector<Tick> m_ticker;
 };
 
 #endif  // VIEW3D_H

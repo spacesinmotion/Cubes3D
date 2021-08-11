@@ -39,6 +39,7 @@ void View3D::initializeGL()
   m_cam.setViewCenter(slm::vec3(0, 0, 2));
 
   startTimer(16);
+  m_timer.start();
 }
 
 void View3D::paintGL()
@@ -114,6 +115,11 @@ void View3D::show_in_scene(std::unique_ptr<RenderObject> ro)
   m_scene->add(std::move(ro));
 }
 
+void View3D::on_tick(const Tick &tick)
+{
+  m_ticker.emplace_back(tick);
+}
+
 void View3D::mousePressEvent(QMouseEvent *) {}
 
 void View3D::mouseReleaseEvent(QMouseEvent *) {}
@@ -147,6 +153,9 @@ void View3D::timerEvent(QTimerEvent *te)
     performPick();
   }
   m_cam.tick();
+
+  for (const auto &t : m_ticker)
+    t(double(m_timer.elapsed()) / 1000.0);
 
   applyCursor();
   update();

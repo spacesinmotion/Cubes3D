@@ -13,7 +13,7 @@ extern "C" {
 using slm::vec3;
 using RenderObjectPtr = std::unique_ptr<RenderObject>;
 
-using CustomPtr = std::variant<RenderObjectPtr, vec3, QColor, SceneHandler *>;
+using CustomPtr = std::variant<RenderObjectPtr, s_float, vec3, QColor, SceneHandler *>;
 
 static char read_fn(fe_Context *, void *vit)
 {
@@ -65,6 +65,14 @@ static T get(fe_Context *ctx, fe_Object *o)
   }
 
   return std::get<T>(*reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)));
+}
+
+static s_float s_number(fe_Context *ctx, fe_Object *o)
+{
+  if (is<s_float>(ctx, o))
+    return get<s_float>(ctx, o);
+
+  return shared(fe_tonumber(ctx, o));
 }
 
 static SceneHandler *_scene(fe_Context *ctx)
@@ -148,7 +156,7 @@ static bool format_need_break(fe_Context *ctx, fe_Object *o)
     {
       char buffer[256] = {0};
       fe_tostring(ctx, a, buffer, 255);
-      for (const auto *key : {"vec3", "color", "fn", "mac", "=", "+", "-", "*", "/"})
+      for (const auto *key : {"vec3", "lfo", "color", "fn", "mac", "=", "+", "-", "*", "/", "<", "<="})
         if (strcmp(buffer, key) == 0)
           return false;
     }
@@ -310,7 +318,7 @@ fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_rotate(fe_Context *ctx, fe_Object *arg)
 {
-  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  auto a = s_number(ctx, fe_nextarg(ctx, &arg));
   auto t = get<vec3>(ctx, fe_nextarg(ctx, &arg));
   auto c = std::make_unique<RotateContainer>(a, t);
 
@@ -321,7 +329,7 @@ fe_Object *FeWrap::_rotate(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_rotateX(fe_Context *ctx, fe_Object *arg)
 {
-  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  auto a = s_number(ctx, fe_nextarg(ctx, &arg));
   auto c = std::make_unique<RotateContainer>(a, vec3(1, 0, 0));
 
   add_all(*c, ctx, &arg);
@@ -331,7 +339,7 @@ fe_Object *FeWrap::_rotateX(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_rotateY(fe_Context *ctx, fe_Object *arg)
 {
-  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  auto a = s_number(ctx, fe_nextarg(ctx, &arg));
   auto c = std::make_unique<RotateContainer>(a, vec3(0, 1, 0));
 
   add_all(*c, ctx, &arg);
@@ -341,7 +349,7 @@ fe_Object *FeWrap::_rotateY(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_rotateZ(fe_Context *ctx, fe_Object *arg)
 {
-  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  auto a = s_number(ctx, fe_nextarg(ctx, &arg));
   auto c = std::make_unique<RotateContainer>(a, vec3(0, 0, 1));
 
   add_all(*c, ctx, &arg);
@@ -362,12 +370,17 @@ fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
 {
-  //  auto *sh = _scene(ctx);
+  const auto center = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  const auto amp = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
 
-  //  while (!fe_isnil(ctx, arg))
-  //    sh->show_in_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
+  auto value = shared(center);
 
-  return fe_bool(ctx, false);
+  _scene(ctx)->on_tick([value, center, amp, frequency](auto t) {
+    *value = center + amp * float(sin(double(t) * M_PI * 2.0 * double(frequency)));
+  });
+
+  return custom(ctx, value);
 }
 
 [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
