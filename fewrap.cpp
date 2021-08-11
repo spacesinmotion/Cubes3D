@@ -1,6 +1,7 @@
 #include "fewrap.h"
 
 #include <QDebug>
+#include <variant>
 
 #include "SceneHandler.h"
 #include "renderobject.h"
@@ -9,25 +10,11 @@ extern "C" {
 #include "fe/fe.h"
 }
 
+using slm::vec3;
+
 struct CustomPtr
 {
-  union
-  {
-    RenderObject *obj;
-    slm::vec3 vec;
-    QColor col;
-    SceneHandler *sh;
-  } d{nullptr};
-
-  enum Type
-  {
-    Object,
-    Vec3,
-    Color,
-    Scene,
-  };
-  Type type{Object};
-
+  std::variant<RenderObject *, vec3, QColor, SceneHandler *> d{static_cast<RenderObject *>(nullptr)};
   bool moved{false};
 };
 
@@ -50,35 +37,11 @@ static QString from_string(fe_Context *ctx, fe_Object *o)
   return t;
 }
 
-fe_Object *custom(fe_Context *ctx, const slm::vec3 &o)
+template <typename T>
+fe_Object *custom(fe_Context *ctx, const T &o)
 {
   auto *wrap = new CustomPtr;
-  wrap->type = CustomPtr::Vec3;
-  wrap->d.vec = o;
-  return fe_ptr(ctx, wrap);
-}
-
-fe_Object *custom(fe_Context *ctx, const QColor &o)
-{
-  auto *wrap = new CustomPtr{};
-  wrap->type = CustomPtr::Color;
-  wrap->d.col = o;
-  return fe_ptr(ctx, wrap);
-}
-
-fe_Object *custom(fe_Context *ctx, RenderObject *o)
-{
-  auto *wrap = new CustomPtr{};
-  wrap->type = CustomPtr::Object;
-  wrap->d.obj = o;
-  return fe_ptr(ctx, wrap);
-}
-
-fe_Object *custom(fe_Context *ctx, SceneHandler *s)
-{
-  auto *wrap = new CustomPtr{};
-  wrap->type = CustomPtr::Scene;
-  wrap->d.sh = s;
+  wrap->d = o;
   return fe_ptr(ctx, wrap);
 }
 
@@ -88,55 +51,35 @@ fe_Object *create_custom(fe_Context *ctx, Args &&...args)
   return custom(ctx, new T(std::forward<Args>(args)...));
 }
 
-template <CustomPtr::Type t>
+template <typename T>
 static bool is(fe_Context *ctx, fe_Object *o)
 {
   if (fe_type(ctx, o) == FE_TPTR)
     if (auto *p = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)))
-      return p->type == t;
+      return std::get_if<T>(&p->d) != nullptr;
   return false;
 }
 
-static slm::vec3 _vec3(fe_Context *ctx, fe_Object *o)
+template <typename T>
+static T get(fe_Context *ctx, fe_Object *o)
 {
-  if (!is<CustomPtr::Vec3>(ctx, o))
-    fe_error(ctx, "Expect vec3!");
+  if (!is<T>(ctx, o))
+  {
+    static const auto err = "Expect " + std::string(typeid(T).name()) + "!";
+    fe_error(ctx, err.c_str());
+  }
 
-  return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.vec;
-}
-
-static QColor _color(fe_Context *ctx, fe_Object *o)
-{
-  if (!is<CustomPtr::Color>(ctx, o))
-    fe_error(ctx, "Expect vec3 object!");
-
-  return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.col;
-}
-
-static RenderObject *_obj(fe_Context *ctx, fe_Object *o)
-{
-  if (!is<CustomPtr::Object>(ctx, o))
-    fe_error(ctx, "Expect RenderObject!");
-
-  return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.obj;
-}
-
-static SceneHandler *_scene(fe_Context *ctx, fe_Object *o)
-{
-  if (!is<CustomPtr::Scene>(ctx, o))
-    fe_error(ctx, "Expect Scene!");
-
-  return reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d.sh;
+  return std::get<T>(reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d);
 }
 
 static SceneHandler *_scene(fe_Context *ctx)
 {
-  return _scene(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
+  return get<SceneHandler *>(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
 }
 
 static std::unique_ptr<RenderObject> _uobj(fe_Context *ctx, fe_Object *o)
 {
-  if (!is<CustomPtr::Object>(ctx, o))
+  if (!is<RenderObject *>(ctx, o))
     fe_error(ctx, "Expect RenderObject!");
 
   auto *custom = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
@@ -144,7 +87,7 @@ static std::unique_ptr<RenderObject> _uobj(fe_Context *ctx, fe_Object *o)
     fe_error(ctx, "Working with deleted data!");
 
   custom->moved = true;
-  return std::unique_ptr<RenderObject>(custom->d.obj);
+  return std::unique_ptr<RenderObject>(std::get<RenderObject *>(custom->d));
 }
 
 FeWrap::FeWrap() : m_data{malloc(m_size)}, m_fe{fe_open(m_data, m_size)}
@@ -294,19 +237,19 @@ QString FeWrap::format(const QString &fe)
   return made;
 }
 
-fe_Object *FeWrap::vec3(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_vec3(fe_Context *ctx, fe_Object *arg)
 {
   auto x = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
   if (fe_isnil(ctx, arg))
-    return custom(ctx, slm::vec3(x));
+    return custom(ctx, vec3(x));
 
   auto y = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
   auto z = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
 
-  return custom(ctx, slm::vec3(x, y, z));
+  return custom(ctx, vec3(x, y, z));
 }
 
-fe_Object *FeWrap::color(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_color(fe_Context *ctx, fe_Object *arg)
 {
   auto *arg1 = fe_nextarg(ctx, &arg);
   if (fe_type(ctx, arg1) == FE_TSTRING)
@@ -321,13 +264,13 @@ fe_Object *FeWrap::color(fe_Context *ctx, fe_Object *arg)
   return custom(ctx, QColor(r, g, b, a));
 }
 
-fe_Object *FeWrap::cube(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_cube(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<RenderDisplayObject>(RenderObject::primitives->cube());
   if (!fe_isnil(ctx, arg))
-    c->set_scale(_vec3(ctx, fe_nextarg(ctx, &arg)));
+    c->set_scale(get<vec3>(ctx, fe_nextarg(ctx, &arg)));
   if (!fe_isnil(ctx, arg))
-    c->setColor(_color(ctx, fe_nextarg(ctx, &arg)));
+    c->setColor(get<QColor>(ctx, fe_nextarg(ctx, &arg)));
 
   return custom(ctx, c.release());
 }
@@ -338,7 +281,7 @@ void FeWrap::add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg)
     c.add(_uobj(ctx, fe_nextarg(ctx, arg)));
 }
 
-fe_Object *FeWrap::clear(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_clear(fe_Context *ctx, fe_Object *arg)
 {
   if (!fe_isnil(ctx, arg))
     fe_error(ctx, "to many arguments for 'clear'");
@@ -348,7 +291,7 @@ fe_Object *FeWrap::clear(fe_Context *ctx, fe_Object *arg)
   return fe_bool(ctx, false);
 }
 
-fe_Object *FeWrap::show(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_show(fe_Context *ctx, fe_Object *arg)
 {
   auto *sh = _scene(ctx);
 
@@ -358,26 +301,26 @@ fe_Object *FeWrap::show(fe_Context *ctx, fe_Object *arg)
   return fe_bool(ctx, false);
 }
 
-fe_Object *FeWrap::group(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_group(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<RenderContainer>();
   add_all(*c, ctx, &arg);
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::translate(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 {
-  auto c = std::make_unique<TranslateContainer>(_vec3(ctx, fe_nextarg(ctx, &arg)));
+  auto c = std::make_unique<TranslateContainer>(get<vec3>(ctx, fe_nextarg(ctx, &arg)));
 
   add_all(*c, ctx, &arg);
 
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::rotate(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_rotate(fe_Context *ctx, fe_Object *arg)
 {
   auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  auto t = _vec3(ctx, fe_nextarg(ctx, &arg));
+  auto t = get<vec3>(ctx, fe_nextarg(ctx, &arg));
   auto c = std::make_unique<RotateContainer>(a, t);
 
   add_all(*c, ctx, &arg);
@@ -385,48 +328,48 @@ fe_Object *FeWrap::rotate(fe_Context *ctx, fe_Object *arg)
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::rotateX(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_rotateX(fe_Context *ctx, fe_Object *arg)
 {
   auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  auto c = std::make_unique<RotateContainer>(a, slm::vec3(1, 0, 0));
+  auto c = std::make_unique<RotateContainer>(a, vec3(1, 0, 0));
 
   add_all(*c, ctx, &arg);
 
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::rotateY(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_rotateY(fe_Context *ctx, fe_Object *arg)
 {
   auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  auto c = std::make_unique<RotateContainer>(a, slm::vec3(0, 1, 0));
+  auto c = std::make_unique<RotateContainer>(a, vec3(0, 1, 0));
 
   add_all(*c, ctx, &arg);
 
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::rotateZ(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_rotateZ(fe_Context *ctx, fe_Object *arg)
 {
   auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  auto c = std::make_unique<RotateContainer>(a, slm::vec3(0, 0, 1));
+  auto c = std::make_unique<RotateContainer>(a, vec3(0, 0, 1));
 
   add_all(*c, ctx, &arg);
 
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::scale(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
 {
   auto *a1 = fe_nextarg(ctx, &arg);
-  auto c = std::make_unique<ScaleContainer>((fe_type(ctx, a1) == FE_TNUMBER) ? slm::vec3(fe_tonumber(ctx, a1))
-                                                                             : _vec3(ctx, a1));
+  auto c = std::make_unique<ScaleContainer>((fe_type(ctx, a1) == FE_TNUMBER) ? vec3(fe_tonumber(ctx, a1))
+                                                                             : get<vec3>(ctx, a1));
 
   add_all(*c, ctx, &arg);
 
   return custom(ctx, c.release());
 }
 
-fe_Object *FeWrap::lfo(fe_Context *ctx, fe_Object *arg)
+fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
 {
   //  auto *sh = _scene(ctx);
 
@@ -447,8 +390,8 @@ fe_Object *FeWrap::lfo(fe_Context *ctx, fe_Object *arg)
 static fe_Object *on_gc(fe_Context *ctx, fe_Object *o)
 {
   auto *custom = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
-  if (!custom->moved && custom->type == CustomPtr::Object)
-    delete custom->d.obj;
+  if (!custom->moved && std::get_if<RenderObject *>(&custom->d) != nullptr)
+    delete std::get<RenderObject *>(custom->d);
   delete custom;
   return nullptr;
 }
@@ -459,19 +402,21 @@ void FeWrap::init_fn(fe_Context *ctx)
   h->error = on_error;
   h->gc = on_gc;
 
-  fe_set(ctx, fe_symbol(ctx, "vec3"), fe_cfunc(ctx, vec3));
-  fe_set(ctx, fe_symbol(ctx, "color"), fe_cfunc(ctx, color));
+  fe_set(ctx, fe_symbol(ctx, "vec3"), fe_cfunc(ctx, _vec3));
+  fe_set(ctx, fe_symbol(ctx, "color"), fe_cfunc(ctx, _color));
 
-  fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, cube));
-  fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, group));
+  fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, _cube));
+  fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, _group));
 
-  fe_set(ctx, fe_symbol(ctx, "clear"), fe_cfunc(ctx, clear));
-  fe_set(ctx, fe_symbol(ctx, "show"), fe_cfunc(ctx, show));
+  fe_set(ctx, fe_symbol(ctx, "clear"), fe_cfunc(ctx, _clear));
+  fe_set(ctx, fe_symbol(ctx, "show"), fe_cfunc(ctx, _show));
 
-  fe_set(ctx, fe_symbol(ctx, "translate"), fe_cfunc(ctx, translate));
-  fe_set(ctx, fe_symbol(ctx, "rotate"), fe_cfunc(ctx, rotate));
-  fe_set(ctx, fe_symbol(ctx, "rotateX"), fe_cfunc(ctx, rotateX));
-  fe_set(ctx, fe_symbol(ctx, "rotateY"), fe_cfunc(ctx, rotateY));
-  fe_set(ctx, fe_symbol(ctx, "rotateZ"), fe_cfunc(ctx, rotateZ));
-  fe_set(ctx, fe_symbol(ctx, "scale"), fe_cfunc(ctx, scale));
+  fe_set(ctx, fe_symbol(ctx, "lfo"), fe_cfunc(ctx, _lfo));
+
+  fe_set(ctx, fe_symbol(ctx, "translate"), fe_cfunc(ctx, _translate));
+  fe_set(ctx, fe_symbol(ctx, "rotate"), fe_cfunc(ctx, _rotate));
+  fe_set(ctx, fe_symbol(ctx, "rotateX"), fe_cfunc(ctx, _rotateX));
+  fe_set(ctx, fe_symbol(ctx, "rotateY"), fe_cfunc(ctx, _rotateY));
+  fe_set(ctx, fe_symbol(ctx, "rotateZ"), fe_cfunc(ctx, _rotateZ));
+  fe_set(ctx, fe_symbol(ctx, "scale"), fe_cfunc(ctx, _scale));
 }

@@ -25,25 +25,25 @@ public:
   QString format(const QString& fe);
 
 private:
-  static fe_Object* vec3(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* color(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _vec3(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _color(fe_Context* ctx, fe_Object* arg);
 
-  static fe_Object* cube(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _cube(fe_Context* ctx, fe_Object* arg);
 
   static void add_all(RenderContainer& c, fe_Context* ctx, fe_Object** arg);
 
-  static fe_Object* clear(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* show(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _clear(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _show(fe_Context* ctx, fe_Object* arg);
 
-  static fe_Object* group(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* translate(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* rotate(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* rotateX(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* rotateY(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* rotateZ(fe_Context* ctx, fe_Object* arg);
-  static fe_Object* scale(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _group(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _translate(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _rotate(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _rotateX(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _rotateY(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _rotateZ(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _scale(fe_Context* ctx, fe_Object* arg);
 
-  static fe_Object* lfo(fe_Context* ctx, fe_Object* arg);
+  static fe_Object* _lfo(fe_Context* ctx, fe_Object* arg);
 
   static void init_fn(fe_Context* ctx);
 
