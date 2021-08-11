@@ -11,12 +11,9 @@ extern "C" {
 }
 
 using slm::vec3;
+using RenderObjectPtr = std::unique_ptr<RenderObject>;
 
-struct CustomPtr
-{
-  std::variant<RenderObject *, vec3, QColor, SceneHandler *> d{static_cast<RenderObject *>(nullptr)};
-  bool moved{false};
-};
+using CustomPtr = std::variant<RenderObjectPtr, vec3, QColor, SceneHandler *>;
 
 static char read_fn(fe_Context *, void *vit)
 {
@@ -38,11 +35,9 @@ static QString from_string(fe_Context *ctx, fe_Object *o)
 }
 
 template <typename T>
-fe_Object *custom(fe_Context *ctx, const T &o)
+fe_Object *custom(fe_Context *ctx, T o)
 {
-  auto *wrap = new CustomPtr;
-  wrap->d = o;
-  return fe_ptr(ctx, wrap);
+  return fe_ptr(ctx, new CustomPtr{std::move(o)});
 }
 
 template <typename T, typename... Args>
@@ -56,7 +51,7 @@ static bool is(fe_Context *ctx, fe_Object *o)
 {
   if (fe_type(ctx, o) == FE_TPTR)
     if (auto *p = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)))
-      return std::get_if<T>(&p->d) != nullptr;
+      return std::get_if<T>(p) != nullptr;
   return false;
 }
 
@@ -69,7 +64,7 @@ static T get(fe_Context *ctx, fe_Object *o)
     fe_error(ctx, err.c_str());
   }
 
-  return std::get<T>(reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o))->d);
+  return std::get<T>(*reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)));
 }
 
 static SceneHandler *_scene(fe_Context *ctx)
@@ -77,17 +72,13 @@ static SceneHandler *_scene(fe_Context *ctx)
   return get<SceneHandler *>(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
 }
 
-static std::unique_ptr<RenderObject> _uobj(fe_Context *ctx, fe_Object *o)
+static RenderObjectPtr _uobj(fe_Context *ctx, fe_Object *o)
 {
-  if (!is<RenderObject *>(ctx, o))
+  if (!is<RenderObjectPtr>(ctx, o))
     fe_error(ctx, "Expect RenderObject!");
 
   auto *custom = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
-  if (custom->moved)
-    fe_error(ctx, "Working with deleted data!");
-
-  custom->moved = true;
-  return std::unique_ptr<RenderObject>(std::get<RenderObject *>(custom->d));
+  return std::move(std::get<RenderObjectPtr>(*custom));
 }
 
 FeWrap::FeWrap() : m_data{malloc(m_size)}, m_fe{fe_open(m_data, m_size)}
@@ -272,7 +263,7 @@ fe_Object *FeWrap::_cube(fe_Context *ctx, fe_Object *arg)
   if (!fe_isnil(ctx, arg))
     c->setColor(get<QColor>(ctx, fe_nextarg(ctx, &arg)));
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 void FeWrap::add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg)
@@ -305,7 +296,7 @@ fe_Object *FeWrap::_group(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<RenderContainer>();
   add_all(*c, ctx, &arg);
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
@@ -314,7 +305,7 @@ fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 
   add_all(*c, ctx, &arg);
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_rotate(fe_Context *ctx, fe_Object *arg)
@@ -325,7 +316,7 @@ fe_Object *FeWrap::_rotate(fe_Context *ctx, fe_Object *arg)
 
   add_all(*c, ctx, &arg);
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_rotateX(fe_Context *ctx, fe_Object *arg)
@@ -335,7 +326,7 @@ fe_Object *FeWrap::_rotateX(fe_Context *ctx, fe_Object *arg)
 
   add_all(*c, ctx, &arg);
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_rotateY(fe_Context *ctx, fe_Object *arg)
@@ -345,7 +336,7 @@ fe_Object *FeWrap::_rotateY(fe_Context *ctx, fe_Object *arg)
 
   add_all(*c, ctx, &arg);
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_rotateZ(fe_Context *ctx, fe_Object *arg)
@@ -355,7 +346,7 @@ fe_Object *FeWrap::_rotateZ(fe_Context *ctx, fe_Object *arg)
 
   add_all(*c, ctx, &arg);
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
@@ -366,7 +357,7 @@ fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
 
   add_all(*c, ctx, &arg);
 
-  return custom(ctx, c.release());
+  return custom(ctx, std::move(c));
 }
 
 fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
@@ -389,10 +380,7 @@ fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
 
 static fe_Object *on_gc(fe_Context *ctx, fe_Object *o)
 {
-  auto *custom = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
-  if (!custom->moved && std::get_if<RenderObject *>(&custom->d) != nullptr)
-    delete std::get<RenderObject *>(custom->d);
-  delete custom;
+  delete reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
   return nullptr;
 }
 
