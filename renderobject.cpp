@@ -31,7 +31,7 @@ void RenderContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
 void ScaleContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
 {
   QMatrix4x4 s = t;
-  s.scale(m_scale.x, m_scale.y, m_scale.z);
+  s.scale(m_scale->x, m_scale->y, m_scale->z);
   RenderContainer::draw(p, s);
 }
 
@@ -45,6 +45,6 @@ void TranslateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
 void RotateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
 {
   QMatrix4x4 s = t;
-  s.rotate(*m_angle, m_axis.x, m_axis.y, m_axis.z);
+  s.rotate(*m_angle, m_axis->x, m_axis->y, m_axis->z);
   RenderContainer::draw(p, s);
 }

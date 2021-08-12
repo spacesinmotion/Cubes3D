@@ -51,7 +51,7 @@ public:
 
 private:
   SharedDisplayObject m_displayObject;
-  QColor m_color{"#56a2b2"};
+  QColor m_color{0x56, 0xa2, 0xb2};
   slm::vec3 m_scale{1.0};
 };
 
@@ -72,14 +72,16 @@ class ScaleContainer : public RenderContainer
 {
 public:
   ScaleContainer() = default;
-  ScaleContainer(const slm::vec3 &s) : m_scale{s} {}
+  ScaleContainer(const s_vec3 &s) : m_scale{s} {}
+  ScaleContainer(const slm::vec3 &s) : m_scale{shared(s)} {}
 
-  void set_scale(const slm::vec3 &s) { m_scale = s; }
+  void set_scale(const s_vec3 &s) { m_scale = s; }
+  void set_scale(const slm::vec3 &s) { set_scale(shared(s)); }
 
   void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
 
 private:
-  slm::vec3 m_scale{1.0};
+  s_vec3 m_scale{shared(slm::vec3(1.0))};
 };
 
 class TranslateContainer : public RenderContainer
@@ -102,21 +104,23 @@ class RotateContainer : public RenderContainer
 {
 public:
   RotateContainer() = default;
-  RotateContainer(float a, const slm::vec3 &t) : m_angle{shared(a)}, m_axis{t} {}
-  RotateContainer(s_float a, const slm::vec3 &t) : m_angle{a}, m_axis{t} {}
+  RotateContainer(s_float a, const s_vec3 &t) : m_angle{a}, m_axis{t} {}
+  RotateContainer(s_float a, const slm::vec3 &t) : m_angle{a}, m_axis{shared(t)} {}
 
-  void set_rotate(s_float a, const slm::vec3 &ax)
+  void set_rotate(s_float a, const s_vec3 &ax)
   {
     m_angle = a;
     m_axis = ax;
   }
-  void set_rotate(float a, const slm::vec3 &ax) { set_rotate(shared(a), ax); }
+  void set_rotate(float a, const slm::vec3 &ax) { set_rotate(shared(a), shared(ax)); }
+  void set_rotate(float a, const s_vec3 &ax) { set_rotate(shared(a), ax); }
+  void set_rotate(s_float a, const slm::vec3 &ax) { set_rotate(a, shared(ax)); }
 
   void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
 
 private:
   s_float m_angle{shared(0.0f)};
-  slm::vec3 m_axis{1.0};
+  s_vec3 m_axis{shared(slm::vec3(1.0))};
 };
 
 #endif  // RENDEROBJECT_H

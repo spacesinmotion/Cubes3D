@@ -1,39 +1,40 @@
 (= body (fn (a)
-  (translate (vec3 0 0 0)
-    (cube (vec3 0.4 0.25 0.5) (color 144 143 14)))))
-
-(= head (fn (a)
   (translate a
-    (rotateY 0
-      (cube (vec3 0.45 0.35 0.35) (color 164 233 14))))))
+    (cube (vec3 0.4 0.25 0.45) (color 174 196 231)))))
+
+(= head (fn (freq)
+  (translate (lfo (vec3 0 0 0) (vec3 0 0 0.015) (* 2 freq))
+    (rotateY (lfo 0 1 freq)
+      (cube (vec3 0.45 0.35 0.35) (color 231 177 189))))))
 
 (= arm (fn (a)
   (rotateX a
     (translate (vec3 0 0 -0.35)
-      (cube (vec3 0.12 0.15 0.4) (color 44 43 139))))))
+      (cube (vec3 0.12 0.15 0.4) (color 115 151 231))))))
 
-(= leg (fn (a)
-  (rotateX a
-    (translate (vec3 0 0 -0.4)
-      (cube (vec3 0.16 0.16 0.4) (color 44 143 39))))))
+(= leg (fn (freq dir)
+  (rotateX (lfo -2 (* dir 25) freq)
+    (translate (lfo (vec3 0 0 -0.3) (vec3 0 0 -0.05) (* dir freq))
+      (cube (vec3 0.16 0.16 0.4) (color 126 127 165))))))
 
 (= guy (fn (freq)
   (group
-    (translate (vec3 0 0 2.05)
-      (head (lfo (vec3 0 0 0) (vec3 0 0 0.025) (* 2 freq))))
-    (translate (vec3 0 0 1.2)
-      (body freq))
-    (translate (vec3 0 0 1.575)
-      (translate (vec3 0.5 0 0)
-        (arm (lfo 5 15 freq)))
-      (translate (vec3 -0.5 0 0)
-        (arm (lfo 5 -15 freq))))
-    (translate (vec3 0 0 0.8)
-      (translate (vec3 0.185 0 0)
-        (leg (lfo -5 -25 freq)))
-      (translate (vec3 -0.185 0 0)
-        (leg (lfo -5 25 freq)))))))
+    (translate (lfo (vec3 0 0 0) (vec3 0 0 0.02) (* 2 freq))
+      (translate (vec3 0 0.03 2.05)
+        (head freq))
+      (translate (vec3 0 0 1.21)
+        (body (vec3 0 0 0)))
+      (translate (vec3 0 0.01 1.575)
+        (translate (vec3 0.5 0 0)
+          (arm (lfo 5 15 freq)))
+        (translate (vec3 -0.5 0 0)
+          (arm (lfo 5 -15 freq))))
+      (translate (vec3 0 0 0.8)
+        (translate (vec3 0.185 0 0)
+          (leg freq 1))
+        (translate (vec3 -0.185 0 0)
+          (leg freq -1)))))))
 
 (show
-  (guy 0.5)
+  (guy 1)
   (cube (vec3 1 1 0.01) (color 200 200 200)))

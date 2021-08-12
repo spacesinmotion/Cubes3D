@@ -327,7 +327,7 @@ fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 fe_Object *FeWrap::_rotate(fe_Context *ctx, fe_Object *arg)
 {
   auto a = s_number(ctx, fe_nextarg(ctx, &arg));
-  auto t = get<vec3>(ctx, fe_nextarg(ctx, &arg));
+  auto t = s_vec(ctx, fe_nextarg(ctx, &arg));
   auto c = std::make_unique<RotateContainer>(a, t);
 
   add_all(*c, ctx, &arg);
@@ -368,8 +368,14 @@ fe_Object *FeWrap::_rotateZ(fe_Context *ctx, fe_Object *arg)
 fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
 {
   auto *a1 = fe_nextarg(ctx, &arg);
-  auto c = std::make_unique<ScaleContainer>((fe_type(ctx, a1) == FE_TNUMBER) ? vec3(fe_tonumber(ctx, a1))
-                                                                             : get<vec3>(ctx, a1));
+
+  auto c = std::make_unique<ScaleContainer>();
+  if (is<s_vec3>(ctx, a1))
+    c->set_scale(get<s_vec3>(ctx, a1));
+  else if (is<vec3>(ctx, a1))
+    c->set_scale(get<vec3>(ctx, a1));
+  else
+    c->set_scale(vec3(fe_tonumber(ctx, a1)));
 
   add_all(*c, ctx, &arg);
 
