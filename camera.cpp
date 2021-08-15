@@ -2,7 +2,7 @@
 
 #include <algorithm>
 
-Camera::Camera() : m_viewPort(640, 480), m_xRot(45.0f), m_zRot(15.0f), m_currentCenter(0.0f), m_center(0.0f) {}
+Camera::Camera() : m_viewPort(640, 480), m_xRot(45.0f) {}
 
 void Camera::tick()
 {
@@ -44,4 +44,38 @@ void Camera::rotationEvent(const slm::vec2 &move2D)
 void Camera::zoomEvent(const slm::vec2 &move2D)
 {
   m_zoomEnd = std::max(0.5f, std::min(1000.0f, 0.005f * move2D.y + m_zoomEnd));
+}
+
+void Camera::set_front()
+{
+  m_zoomEnd = 10.0;
+  m_xRot = 60.0;
+  m_zRot = 0.0;
+}
+
+void Camera::set_back()
+{
+  m_zoomEnd = 10.0;
+  m_xRot = 60.0;
+  m_zRot = 180.0;
+}
+
+void Camera::set_right()
+{
+  m_zoomEnd = 10.0;
+  m_xRot = 60.0;
+  m_zRot = 90.0;
+}
+
+void Camera::set_left()
+{
+  m_zoomEnd = 10.0;
+  m_xRot = 60.0;
+  m_zRot = -90.0;
+}
+
+void Camera::jump()
+{
+  m_zoom = m_zoomEnd;
+  m_currentCenter = m_center;
 }

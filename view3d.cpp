@@ -3,7 +3,10 @@
 #include <QApplication>
 #include <QDebug>
 #include <QMouseEvent>
+#include <QOffscreenSurface>
+#include <QOpenGLFramebufferObject>
 #include <QPainter>
+#include <QShortcut>
 
 #include "ray.h"
 
@@ -33,10 +36,63 @@ void View3D::initializeGL()
   glEnable(GL_DEPTH_TEST);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  glPolygonOffset(0.5, 10.0);
+  glEnable(GL_CULL_FACE);
 
   m_cam.setViewCenter(slm::vec3(0, 0, 2));
+
+  connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this] {
+    m_cam.set_front();
+    m_cam.jump();
+  });
+  connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this] {
+    m_cam.set_right();
+    m_cam.jump();
+  });
+  connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this] {
+    m_cam.set_left();
+    m_cam.jump();
+  });
+  connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this] {
+    m_cam.set_back();
+    m_cam.jump();
+  });
+
+  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
+    QOpenGLContext context;
+    context.setShareContext(this->context());
+    if (!context.create())
+    {
+      qDebug() << "Can't create GL context.";
+    }
+    QOffscreenSurface surface;
+    surface.setFormat(context.format());
+    surface.create();
+    if (!surface.isValid())
+    {
+      qDebug() << "Surface not valid.";
+    }
+
+    if (!context.makeCurrent(&surface))
+    {
+      qDebug() << "Can't make context current.";
+    }
+
+    QOpenGLFramebufferObject fbo(width(), height());
+    fbo.bind();
+    context.functions()->glViewport(0, 0, width(), height());
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthFunc(GL_LESS);
+    glEnable(GL_CULL_FACE);
+
+    paintGL();
+
+    auto img = fbo.toImage(true);
+
+    img.save("test.png");
+  });
 
   startTimer(16);
   m_timer.start();
@@ -44,7 +100,6 @@ void View3D::initializeGL()
 
 void View3D::paintGL()
 {
-  glEnable(GL_CULL_FACE);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
   m_program.bind();
