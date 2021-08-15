@@ -6,7 +6,8 @@
 #include "SceneHandler.h"
 #include "renderobject.h"
 
-extern "C" {
+extern "C"
+{
 #include "fe/fe.h"
 }
 
@@ -110,6 +111,7 @@ FeWrap::~FeWrap()
 
 void FeWrap::load(const QString &f)
 {
+  setlocale(LC_ALL, "C");
   FILE *fp = fopen(f.toLocal8Bit(), "rb");
   int gc = fe_savegc(m_fe);
 
@@ -123,11 +125,14 @@ void FeWrap::load(const QString &f)
     fe_restoregc(m_fe, gc);
   }
 
+  setlocale(LC_ALL, "");
   fclose(fp);
 }
 
 QString FeWrap::eval(const QString &fe, SceneHandler &sh)
 {
+  setlocale(LC_ALL, "C");
+
   const auto fet = fe.toLocal8Bit();
   auto it = fet.begin();
 
@@ -152,6 +157,7 @@ QString FeWrap::eval(const QString &fe, SceneHandler &sh)
 
   fe_set(m_fe, fe_symbol(m_fe, "scene"), nullptr);
 
+  setlocale(LC_ALL, "");
   return last_text;
 }
 
@@ -387,9 +393,8 @@ fe_Object *_lfo_i(fe_Context *ctx, T center, T amp, float frequency)
 {
   auto value = shared(center);
 
-  _scene(ctx)->on_tick([value, center, amp, frequency](auto t) {
-    *value = center + amp * float(sin(double(t) * M_PI * 2.0 * double(frequency)));
-  });
+  _scene(ctx)->on_tick([value, center, amp, frequency](auto t)
+                       { *value = center + amp * float(sin(double(t) * M_PI * 2.0 * double(frequency))); });
 
   return custom(ctx, value);
 }

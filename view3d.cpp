@@ -7,6 +7,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QPainter>
 #include <QShortcut>
+#include <QFileInfo>
 
 #include "ray.h"
 
@@ -40,59 +41,64 @@ void View3D::initializeGL()
 
   m_cam.setViewCenter(slm::vec3(0, 0, 2));
 
-  connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this] {
-    m_cam.set_front();
-    m_cam.jump();
-  });
-  connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this] {
-    m_cam.set_right();
-    m_cam.jump();
-  });
-  connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this] {
-    m_cam.set_left();
-    m_cam.jump();
-  });
-  connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this] {
-    m_cam.set_back();
-    m_cam.jump();
-  });
+  connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this]
+          {
+            m_cam.set_front();
+            m_cam.jump();
+          });
+  connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this]
+          {
+            m_cam.set_right();
+            m_cam.jump();
+          });
+  connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this]
+          {
+            m_cam.set_left();
+            m_cam.jump();
+          });
+  connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this]
+          {
+            m_cam.set_back();
+            m_cam.jump();
+          });
 
-  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
-    QOpenGLContext context;
-    context.setShareContext(this->context());
-    if (!context.create())
-    {
-      qDebug() << "Can't create GL context.";
-    }
-    QOffscreenSurface surface;
-    surface.setFormat(context.format());
-    surface.create();
-    if (!surface.isValid())
-    {
-      qDebug() << "Surface not valid.";
-    }
+  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this]
+          {
+            QOpenGLContext context;
+            context.setShareContext(this->context());
+            if (!context.create())
+            {
+              qDebug() << "Can't create GL context.";
+            }
+            QOffscreenSurface surface;
+            surface.setFormat(context.format());
+            surface.create();
+            if (!surface.isValid())
+            {
+              qDebug() << "Surface not valid.";
+            }
 
-    if (!context.makeCurrent(&surface))
-    {
-      qDebug() << "Can't make context current.";
-    }
+            if (!context.makeCurrent(&surface))
+            {
+              qDebug() << "Can't make context current.";
+            }
 
-    QOpenGLFramebufferObject fbo(width(), height());
-    fbo.bind();
-    context.functions()->glViewport(0, 0, width(), height());
+            QOpenGLFramebufferObject fbo(width(), height());
+            fbo.bind();
+            context.functions()->glViewport(0, 0, width(), height());
 
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glDepthFunc(GL_LESS);
-    glEnable(GL_CULL_FACE);
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_CULL_FACE);
 
-    paintGL();
+            paintGL();
 
-    auto img = fbo.toImage(true);
+            auto img = fbo.toImage(true);
 
-    img.save("test.png");
-  });
+            img.save("test.png");
+          });
 
   startTimer(16);
   m_timer.start();
@@ -157,7 +163,9 @@ SharedDisplayObject View3D::loadObject(const QString &path)
 
 SharedDisplayObject View3D::cube()
 {
-  return loadObject("assets/cube.ply");
+  if (QFileInfo("assets/cube.ply").isFile())
+    return loadObject("assets/cube.ply");
+  return loadObject("../assets/cube.ply");
 }
 
 void View3D::clear_scene()
@@ -186,7 +194,8 @@ void View3D::mouseMoveEvent(QMouseEvent *me)
     m_cam.rotationEvent(slm::vec2(me->x() - m_lastPos.x(), (me->y() - m_lastPos.y())));
   }
   else if (QApplication::mouseButtons() == Qt::LeftButton)
-  {}
+  {
+  }
   else if ((me->pos() - m_lastPos).manhattanLength() > 0)
     m_needPick = true;
 
@@ -242,10 +251,10 @@ void View3D::drawLine(const QColor &c, const std::vector<slm::vec3> &l)
 
 void View3D::initShaders()
 {
-  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Vertex, "shader/vshader.glsl"))
+  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Vertex, ":shader/vshader.glsl"))
     qFatal("Failed to load vertex shader");
 
-  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Fragment, "shader/fshader.glsl"))
+  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Fragment, ":shader/fshader.glsl"))
     qFatal("Failed to load fragment shader");
 
   if (!m_program.link())

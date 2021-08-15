@@ -1,3 +1,5 @@
+#version 130
+
 #ifdef GL_ES
 // Set default precision to medium
 precision mediump int;
@@ -18,5 +20,6 @@ void main()
 {
   vertex =  model_view * object_transformation * vec4(a_position, 1.0);
   gl_Position = projection * vertex;
-  normal = transpose(inverse(model_view)) * vec4(a_normal, 0.0);
+//  normal = transpose(inverse(model_view)) * vec4(a_normal, 0.0);
+  normal = model_view * vec4(a_normal, 0.0);
 }

@@ -1,0 +1,8 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+    <file>shader/fshader.glsl</file>
+    <file>shader/vshader.glsl</file>
+    <file>shader/overlay.frag</file>
+    <file>shader/overlay.vert</file>
+</qresource>
+</RCC>
