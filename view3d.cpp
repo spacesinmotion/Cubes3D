@@ -71,7 +71,7 @@ void View3D::initializeGL()
               qDebug() << "Can't create GL context.";
             }
             QOffscreenSurface surface;
-            surface.setFormat(context.format());
+            surface.setFormat(this->context()->format());
             surface.create();
             if (!surface.isValid())
             {
@@ -83,7 +83,10 @@ void View3D::initializeGL()
               qDebug() << "Can't make context current.";
             }
 
-            QOpenGLFramebufferObject fbo(width(), height());
+            QOpenGLFramebufferObjectFormat f;
+            f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            QOpenGLFramebufferObject fbo(width(), height(), f);
+
             fbo.bind();
             context.functions()->glViewport(0, 0, width(), height());
 
