@@ -15,9 +15,12 @@ attribute vec3 a_normal;
 
 varying vec4 vertex;
 varying vec4 normal;
+varying vec4 lightPos;
 
 void main()
 {
+  lightPos = model_view * vec4(0.0, -6.0, 10.0, 1.0);
+
   vertex =  model_view * object_transformation * vec4(a_position, 1.0);
   gl_Position = projection * vertex;
 //  normal = transpose(inverse(model_view)) * vec4(a_normal, 0.0);
