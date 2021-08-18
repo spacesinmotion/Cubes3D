@@ -22,7 +22,7 @@ public: // getter
 
 public: // setter
   void setViewPort(const slm::vec2 &s) { m_viewPort = s; }
-  void setViewCenter(const slm::vec3 &c) { m_currentCenter = c; }
+  void setViewCenter(const slm::vec3 &c) { m_center = c; }
 
   void translationEvent(const slm::vec2 &move2D);
   void rotationEvent(const slm::vec2 &move2D);
@@ -37,14 +37,12 @@ public: // setter
 private:
   slm::vec2 m_viewPort;
 
-  float m_zoom{0.01f};
-  float m_zoomEnd{10.f};
+  float m_zoom{10.f};
 
   float m_xRot{60.0f};
   float m_zRot{0.0f};
 
-  slm::vec3 m_currentCenter{0.0};
-  //  slm::vec3 m_center{0.0};
+  slm::vec3 m_center{0.0};
 };
 
 #endif // CAMERA_H

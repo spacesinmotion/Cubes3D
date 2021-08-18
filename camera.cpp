@@ -6,8 +6,6 @@ Camera::Camera() : m_viewPort(640, 480), m_xRot(45.0f) {}
 
 void Camera::tick()
 {
-  //m_currentCenter = slm::mix(m_currentCenter, m_center, 0.1f);
-  m_zoom = slm::mix(m_zoom, m_zoomEnd, 0.1f);
 }
 
 const slm::vec2 &Camera::viewPort() const
@@ -33,7 +31,7 @@ slm::mat4 Camera::rotation() const
 slm::mat4 Camera::modelView() const
 {
   auto res = rotation();
-  res *= slm::translation(-m_currentCenter);
+  res *= slm::translation(-m_center);
   return res;
 }
 
@@ -41,7 +39,7 @@ void Camera::translationEvent(const slm::vec2 &move2D)
 {
   auto mv = slm::transpose(rotation());
   const auto m2 = move2D * m_zoom / std::max(m_viewPort.x, m_viewPort.y);
-  m_currentCenter += (-m2.x * mv[0] + m2.y * mv[1]).xyz();
+  m_center += (-m2.x * mv[0] + m2.y * mv[1]).xyz();
 }
 
 void Camera::rotationEvent(const slm::vec2 &move2D)
@@ -52,39 +50,33 @@ void Camera::rotationEvent(const slm::vec2 &move2D)
 
 void Camera::zoomEvent(const slm::vec2 &move2D)
 {
-  m_zoomEnd = std::max(0.5f, std::min(1000.0f, 0.005f * move2D.y + m_zoomEnd));
+  m_zoom = std::max(0.5f, std::min(1000.0f, 0.005f * move2D.y + m_zoom));
 }
 
 void Camera::set_front()
 {
-  m_zoomEnd = 10.0;
+  m_zoom = 10.0;
   m_xRot = 60.0;
   m_zRot = 0.0;
 }
 
 void Camera::set_back()
 {
-  m_zoomEnd = 10.0;
+  m_zoom = 10.0;
   m_xRot = 60.0;
   m_zRot = 180.0;
 }
 
 void Camera::set_right()
 {
-  m_zoomEnd = 10.0;
+  m_zoom = 10.0;
   m_xRot = 60.0;
   m_zRot = 90.0;
 }
 
 void Camera::set_left()
 {
-  m_zoomEnd = 10.0;
+  m_zoom = 10.0;
   m_xRot = 60.0;
   m_zRot = -90.0;
-}
-
-void Camera::jump()
-{
-  m_zoom = m_zoomEnd;
-  //m_currentCenter = m_center;
 }

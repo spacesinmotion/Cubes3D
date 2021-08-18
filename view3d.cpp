@@ -42,25 +42,13 @@ void View3D::initializeGL()
   m_cam.setViewCenter(slm::vec3(0, 0, 2));
 
   connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this]
-          {
-            m_cam.set_front();
-            m_cam.jump();
-          });
+          { m_cam.set_front(); });
   connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this]
-          {
-            m_cam.set_right();
-            m_cam.jump();
-          });
+          { m_cam.set_right(); });
   connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this]
-          {
-            m_cam.set_left();
-            m_cam.jump();
-          });
+          { m_cam.set_left(); });
   connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this]
-          {
-            m_cam.set_back();
-            m_cam.jump();
-          });
+          { m_cam.set_back(); });
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this]
           {
