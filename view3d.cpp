@@ -121,6 +121,9 @@ void View3D::paintGL()
   //  drawLine(Qt::green, {slm::vec3(0.0), slm::vec3(0.0, 10.0, 0.0)});
   //  drawLine(Qt::blue, {slm::vec3(0.0), slm::vec3(0.0, 0.0, 10.0)});
 
+  drawLine(Qt::red, {slm::vec3(0), slm::transpose(m_cam.rotation())[0].xyz() / m_cam.zoom()});
+  drawLine(Qt::green, {slm::vec3(0), slm::transpose(m_cam.rotation())[1].xyz() / m_cam.zoom()});
+
   drawLine(
       Qt::lightGray,
       {slm::vec3(-1.0, -1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(-1.0, -1.0, 4.0), slm::vec3(-1.0, 1.0, 4.0),
@@ -198,6 +201,10 @@ void View3D::mouseMoveEvent(QMouseEvent *me)
   }
   else if (QApplication::mouseButtons() == Qt::LeftButton)
   {
+    if (me->modifiers() == Qt::ControlModifier)
+      m_cam.rotationEvent(slm::vec2(me->x() - m_lastPos.x(), (me->y() - m_lastPos.y())));
+    else
+      m_cam.translationEvent(slm::vec2(me->x() - m_lastPos.x(), (me->y() - m_lastPos.y())));
   }
   else if ((me->pos() - m_lastPos).manhattanLength() > 0)
     m_needPick = true;
