@@ -17,10 +17,10 @@ class OverlayObject;
 class Ray;
 
 class View3D
-  : public QOpenGLWidget
-  , public PrimitiveProvider
-  , public SceneHandler
-  , protected QOpenGLFunctions
+    : public QOpenGLWidget,
+      public PrimitiveProvider,
+      public SceneHandler,
+      protected QOpenGLFunctions
 {
 public:
   explicit View3D(QWidget *parent = nullptr);
@@ -37,6 +37,8 @@ public:
   void show_in_scene(std::unique_ptr<RenderObject>) final;
   void on_tick(const Tick &) final;
 
+  void onSaveImg(const std::function<void(const QImage &)> &cb);
+
 protected:
   void initializeGL() final;
   void paintGL() final;
@@ -52,7 +54,7 @@ protected:
 
   void timerEvent(QTimerEvent *te) final;
 
-private:  // helper
+private: // helper
   void drawObjects();
   void drawLine(const QColor &c, const std::vector<slm::vec3> &l);
 
@@ -64,8 +66,9 @@ private:  // helper
 
   void applyCursor();
 
-private:  // data
-  bool m_needPick;
+private: // data
+  bool m_needPick{true};
+  bool m_drawHelper{true};
 
   Camera m_cam;
   QPoint m_lastPos;
@@ -79,4 +82,4 @@ private:  // data
   std::vector<Tick> m_ticker;
 };
 
-#endif  // VIEW3D_H
+#endif // VIEW3D_H

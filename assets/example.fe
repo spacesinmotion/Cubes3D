@@ -1,3 +1,5 @@
+
+
 (= body (fn (a)
   (translate a
     (cube (vec3 0.4 0.25 0.45) (color 174 196 231)))))
@@ -36,7 +38,4 @@
           (leg freq -1)))))))
 
 (show
-  (guy 1)
-  (translate (vec3 0 -1 5)
-    (cube (vec3 0.1 0.1 0.1) (color 43 234 23)))
-  (cube (vec3 1 1 0.01) (color 200 200 200)))
+  (guy 1))

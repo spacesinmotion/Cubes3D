@@ -11,7 +11,7 @@
 
 #include "ray.h"
 
-View3D::View3D(QWidget *parent) : QOpenGLWidget(parent), m_needPick(false)
+View3D::View3D(QWidget *parent) : QOpenGLWidget(parent)
 {
   setMouseTracking(true);
   setFocusPolicy(Qt::StrongFocus);
@@ -50,47 +50,6 @@ void View3D::initializeGL()
   connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this]
           { m_cam.set_back(); });
 
-  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this]
-          {
-            QOpenGLContext context;
-            context.setShareContext(this->context());
-            if (!context.create())
-            {
-              qDebug() << "Can't create GL context.";
-            }
-            QOffscreenSurface surface;
-            surface.setFormat(this->context()->format());
-            surface.create();
-            if (!surface.isValid())
-            {
-              qDebug() << "Surface not valid.";
-            }
-
-            if (!context.makeCurrent(&surface))
-            {
-              qDebug() << "Can't make context current.";
-            }
-
-            QOpenGLFramebufferObjectFormat f;
-            f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-            QOpenGLFramebufferObject fbo(width(), height(), f);
-
-            fbo.bind();
-            context.functions()->glViewport(0, 0, width(), height());
-
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthFunc(GL_LESS);
-            glEnable(GL_CULL_FACE);
-
-            paintGL();
-
-            auto img = fbo.toImage(true);
-
-            img.save("test.png");
-          });
-
   startTimer(16);
   m_timer.start();
 }
@@ -111,16 +70,18 @@ void View3D::paintGL()
   //  drawLine(Qt::green, {slm::vec3(0.0), slm::vec3(0.0, 10.0, 0.0)});
   //  drawLine(Qt::blue, {slm::vec3(0.0), slm::vec3(0.0, 0.0, 10.0)});
 
-  drawLine(Qt::red, {slm::vec3(0), slm::transpose(m_cam.rotation())[0].xyz() / m_cam.zoom()});
-  drawLine(Qt::green, {slm::vec3(0), slm::transpose(m_cam.rotation())[1].xyz() / m_cam.zoom()});
+  if (m_drawHelper)
+  {
+    drawLine(Qt::red, {slm::vec3(0), slm::transpose(m_cam.rotation())[0].xyz() / m_cam.zoom()});
+    drawLine(Qt::green, {slm::vec3(0), slm::transpose(m_cam.rotation())[1].xyz() / m_cam.zoom()});
 
-  drawLine(
-      Qt::lightGray,
-      {slm::vec3(-1.0, -1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(-1.0, -1.0, 4.0), slm::vec3(-1.0, 1.0, 4.0),
-       slm::vec3(-1.0, 1.0, 4.0), slm::vec3(1.0, 1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(1.0, 1.0, 4.0),
-       slm::vec3(-1.0, -1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(-1.0, -1.0, 0.0), slm::vec3(-1.0, 1.0, 0.0),
-       slm::vec3(-1.0, 1.0, 0.0), slm::vec3(1.0, 1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(1.0, 1.0, 0.0)});
-
+    drawLine(
+        Qt::lightGray,
+        {slm::vec3(-1.0, -1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(-1.0, -1.0, 4.0), slm::vec3(-1.0, 1.0, 4.0),
+         slm::vec3(-1.0, 1.0, 4.0), slm::vec3(1.0, 1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(1.0, 1.0, 4.0),
+         slm::vec3(-1.0, -1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(-1.0, -1.0, 0.0), slm::vec3(-1.0, 1.0, 0.0),
+         slm::vec3(-1.0, 1.0, 0.0), slm::vec3(1.0, 1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(1.0, 1.0, 0.0)});
+  }
   drawObjects();
 
   m_program.release();
@@ -301,4 +262,51 @@ void View3D::applyCursor()
     setCursor(Qt::SizeAllCursor);
   else
     setCursor(Qt::ArrowCursor);
+}
+
+void View3D::onSaveImg(const std::function<void(const QImage &)> &cb)
+{
+
+  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this, cb]
+          {
+            QOpenGLContext context;
+            context.setShareContext(this->context());
+            if (!context.create())
+            {
+              qDebug() << "Can't create GL context.";
+            }
+            QOffscreenSurface surface;
+            surface.setFormat(this->context()->format());
+            surface.create();
+            if (!surface.isValid())
+            {
+              qDebug() << "Surface not valid.";
+            }
+
+            if (!context.makeCurrent(&surface))
+            {
+              qDebug() << "Can't make context current.";
+            }
+
+            QOpenGLFramebufferObjectFormat f;
+            f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+            int w = 16, h = 32;
+            QOpenGLFramebufferObject fbo(w, h, f);
+            m_cam.setViewPort(slm::vec2(w, h));
+            fbo.bind();
+            context.functions()->glViewport(0, 0, w, h);
+
+            glEnable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glDepthFunc(GL_LESS);
+            glEnable(GL_CULL_FACE);
+
+            m_drawHelper = false;
+            paintGL();
+            m_drawHelper = true;
+
+            cb(fbo.toImage(true));
+            m_cam.setViewPort(slm::vec2(width(), height()));
+          });
 }

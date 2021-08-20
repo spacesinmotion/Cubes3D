@@ -14,10 +14,7 @@
    <string>Cubes3D</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="spacing">
-     <number>0</number>
-    </property>
+   <layout class="QHBoxLayout" name="horizontalLayout">
     <property name="leftMargin">
      <number>0</number>
     </property>
@@ -31,11 +28,11 @@
      <number>0</number>
     </property>
     <item>
-     <widget class="QSplitter" name="splitter_2">
+     <widget class="QSplitter" name="spTopBottom">
       <property name="orientation">
        <enum>Qt::Vertical</enum>
       </property>
-      <widget class="QSplitter" name="splitter">
+      <widget class="QSplitter" name="spCodeScene">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>
@@ -49,16 +46,29 @@
        </widget>
        <widget class="View3D" name="view3d" native="true"/>
       </widget>
-      <widget class="QTextEdit" name="teFeOut">
-       <property name="font">
-        <font>
-         <family>Consolas</family>
-         <pointsize>9</pointsize>
-        </font>
+      <widget class="QSplitter" name="spLogImg">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
        </property>
-       <property name="textInteractionFlags">
-        <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-       </property>
+       <widget class="QTextEdit" name="teFeOut">
+        <property name="font">
+         <font>
+          <family>Consolas</family>
+          <pointsize>9</pointsize>
+         </font>
+        </property>
+        <property name="textInteractionFlags">
+         <set>Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label">
+        <property name="frameShape">
+         <enum>QFrame::Box</enum>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
       </widget>
      </widget>
     </item>
@@ -70,7 +80,7 @@
      <x>0</x>
      <y>0</y>
      <width>794</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

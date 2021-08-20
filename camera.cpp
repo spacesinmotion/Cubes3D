@@ -55,28 +55,28 @@ void Camera::zoomEvent(const slm::vec2 &move2D)
 
 void Camera::set_front()
 {
-  m_zoom = 10.0;
-  m_xRot = 60.0;
+  m_zoom = 4.0f;
+  m_xRot = 45.0;
   m_zRot = 0.0;
 }
 
 void Camera::set_back()
 {
-  m_zoom = 10.0;
-  m_xRot = 60.0;
+  m_zoom = 4.0f;
+  m_xRot = 45.0;
   m_zRot = 180.0;
 }
 
 void Camera::set_right()
 {
-  m_zoom = 10.0;
-  m_xRot = 60.0;
+  m_zoom = 4.0f;
+  m_xRot = 45.0;
   m_zRot = 90.0;
 }
 
 void Camera::set_left()
 {
-  m_zoom = 10.0;
-  m_xRot = 60.0;
+  m_zoom = 4.0f;
+  m_xRot = 45.0;
   m_zRot = -90.0;
 }

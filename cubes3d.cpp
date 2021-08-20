@@ -14,14 +14,19 @@ Cubes3D::Cubes3D(QWidget *parent) : QMainWindow(parent), ui(new Ui::Cubes3D)
   QSettings s;
   restoreGeometry(s.value("Main/geomtry").toByteArray());
   restoreState(s.value("Main/state").toByteArray());
-  ui->splitter->restoreState(s.value("Main/splitter1state").toByteArray());
-  ui->splitter_2->restoreState(s.value("Main/splitter2state").toByteArray());
+  ui->spCodeScene->restoreState(s.value("Main/CodeSceneSplitter").toByteArray());
+  ui->spLogImg->restoreState(s.value("Main/LogImgSplitter").toByteArray());
+  ui->spTopBottom->restoreState(s.value("Main/TopBottomSplitter").toByteArray());
 
-  QTimer::singleShot(10, this, [this] {
-    const auto recent = QSettings().value("Main/RecentFiles").toStringList();
-    if (!recent.isEmpty())
-      open_file(recent.front());
-  });
+  ui->view3d->onSaveImg([this](const auto &img)
+                        { ui->label->setPixmap(QPixmap::fromImage(img).scaled(16 * 8, 32 * 8)); });
+
+  QTimer::singleShot(10, this, [this]
+                     {
+                       const auto recent = QSettings().value("Main/RecentFiles").toStringList();
+                       if (!recent.isEmpty())
+                         open_file(recent.front());
+                     });
 
   new FeSyntaxHighlighter(ui->teFeIn->document());
 
@@ -38,8 +43,9 @@ void Cubes3D::closeEvent(QCloseEvent *e)
   QSettings s;
   s.setValue("Main/geomtry", saveGeometry());
   s.setValue("Main/state", saveState());
-  s.setValue("Main/splitter1state", ui->splitter->saveState());
-  s.setValue("Main/splitter2state", ui->splitter_2->saveState());
+  s.setValue("Main/CodeSceneSplitter", ui->spCodeScene->saveState());
+  s.setValue("Main/LogImgSplitter", ui->spLogImg->saveState());
+  s.setValue("Main/TopBottomSplitter", ui->spTopBottom->saveState());
 
   QMainWindow::closeEvent(e);
 }

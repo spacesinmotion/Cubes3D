@@ -37,9 +37,9 @@ public: // setter
 private:
   slm::vec2 m_viewPort;
 
-  float m_zoom{10.f};
+  float m_zoom{4.f};
 
-  float m_xRot{60.0f};
+  float m_xRot{45.0f};
   float m_zRot{0.0f};
 
   slm::vec3 m_center{0.0};
