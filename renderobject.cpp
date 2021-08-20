@@ -13,6 +13,7 @@ void RenderDisplayObject::draw(QOpenGLShaderProgram &program, const QMatrix4x4 &
   auto s = t;
   s.scale(m_scale.x, m_scale.y, m_scale.z);
   program.setUniformValue("object_transformation", s);
+  program.setUniformValue("object_normal", s.inverted().transposed());
 
   m_displayObject->draw(program);
 }

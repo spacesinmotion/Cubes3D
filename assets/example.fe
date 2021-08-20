@@ -18,7 +18,7 @@
       (cube (vec3 0.16 0.16 0.4) (color 126 127 165))))))
 
 (= guy (fn (freq)
-  (group
+  (rotateZ (lfo -1 1 (* 0.1 freq))
     (translate (lfo (vec3 0 0 0) (vec3 0 0 0.02) (* 2 freq))
       (translate (vec3 0 0.03 2.05)
         (head freq))
@@ -37,4 +37,6 @@
 
 (show
   (guy 1)
+  (translate (vec3 0 -1 5)
+    (cube (vec3 0.1 0.1 0.1) (color 43 234 23)))
   (cube (vec3 1 1 0.01) (color 200 200 200)))

@@ -8,21 +8,19 @@ precision mediump float;
 
 uniform mat4 projection;
 uniform mat4 model_view;
+uniform mat4 normal_matrix;
 uniform mat4 object_transformation = mat4(1.0);
+uniform mat4 object_normal = mat4(1.0);
 
-attribute vec3 a_position;
-attribute vec3 a_normal;
+attribute vec3 a_position, a_normal;
 
-varying vec4 vertex;
-varying vec4 normal;
-varying vec4 lightPos;
+varying vec4 vertex, normal, lightPos;
 
 void main()
 {
-  lightPos = model_view * vec4(0.0, -6.0, 10.0, 1.0);
+  lightPos = model_view* vec4(0.0, -1.0, 4.0, 1.0);
 
   vertex =  model_view * object_transformation * vec4(a_position, 1.0);
   gl_Position = projection * vertex;
-//  normal = transpose(inverse(model_view)) * vec4(a_normal, 0.0);
-  normal = model_view * vec4(a_normal, 0.0);
+  normal = normal_matrix * object_normal * vec4(a_normal, 0.0);
 }

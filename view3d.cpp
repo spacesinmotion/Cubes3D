@@ -102,8 +102,10 @@ void View3D::paintGL()
   m_program.bind();
   m_program.setUniformValue("projection", QMatrix4x4(slm::transpose(m_cam.projection()).begin()));
   m_program.setUniformValue("model_view", QMatrix4x4(slm::transpose(m_cam.modelView()).begin()));
+  m_program.setUniformValue("normal_matrix", QMatrix4x4(slm::inverse(m_cam.modelView()).begin()));
 
   m_program.setUniformValue("object_transformation", QMatrix4x4());
+  m_program.setUniformValue("object_normal", QMatrix4x4());
 
   //  drawLine(Qt::red, {slm::vec3(0.0), slm::vec3(10.0, 0.0, 0.0)});
   //  drawLine(Qt::green, {slm::vec3(0.0), slm::vec3(0.0, 10.0, 0.0)});
@@ -189,7 +191,9 @@ void View3D::mouseMoveEvent(QMouseEvent *me)
   }
   else if (QApplication::mouseButtons() == Qt::LeftButton)
   {
-    if (me->modifiers() == Qt::ControlModifier)
+    if (me->modifiers() == Qt::ShiftModifier)
+      m_cam.zoomEvent(10.0 * slm::vec2(me->x() - m_lastPos.x(), (me->y() - m_lastPos.y())));
+    else if (me->modifiers() == Qt::ControlModifier)
       m_cam.rotationEvent(slm::vec2(me->x() - m_lastPos.x(), (me->y() - m_lastPos.y())));
     else
       m_cam.translationEvent(slm::vec2(me->x() - m_lastPos.x(), (me->y() - m_lastPos.y())));
