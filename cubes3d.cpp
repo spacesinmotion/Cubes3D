@@ -3,6 +3,7 @@
 #include <QFileDialog>
 #include <QSettings>
 #include <QTimer>
+#include <QShortcut>
 
 #include "fesyntaxhighlighter.h"
 #include "ui_cubes3d.h"
@@ -18,8 +19,11 @@ Cubes3D::Cubes3D(QWidget *parent) : QMainWindow(parent), ui(new Ui::Cubes3D)
   ui->spLogImg->restoreState(s.value("Main/LogImgSplitter").toByteArray());
   ui->spTopBottom->restoreState(s.value("Main/TopBottomSplitter").toByteArray());
 
-  ui->view3d->onSaveImg([this](const auto &img)
-                        { ui->label->setPixmap(QPixmap::fromImage(img).scaled(16 * 8, 32 * 8)); });
+  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this]
+          {
+            const int w = 32, h = 64, s = 4;
+            ui->label->setPixmap(QPixmap::fromImage(ui->view3d->toImage(w, h)).scaled(w * s, h * s));
+          });
 
   QTimer::singleShot(10, this, [this]
                      {

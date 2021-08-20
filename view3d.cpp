@@ -264,49 +264,45 @@ void View3D::applyCursor()
     setCursor(Qt::ArrowCursor);
 }
 
-void View3D::onSaveImg(const std::function<void(const QImage &)> &cb)
+QImage View3D::toImage(int w, int h)
 {
+  QOpenGLContext context;
+  context.setShareContext(this->context());
+  if (!context.create())
+  {
+    qDebug() << "Can't create GL context.";
+  }
+  QOffscreenSurface surface;
+  surface.setFormat(this->context()->format());
+  surface.create();
+  if (!surface.isValid())
+  {
+    qDebug() << "Surface not valid.";
+  }
 
-  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this, cb]
-          {
-            QOpenGLContext context;
-            context.setShareContext(this->context());
-            if (!context.create())
-            {
-              qDebug() << "Can't create GL context.";
-            }
-            QOffscreenSurface surface;
-            surface.setFormat(this->context()->format());
-            surface.create();
-            if (!surface.isValid())
-            {
-              qDebug() << "Surface not valid.";
-            }
+  if (!context.makeCurrent(&surface))
+  {
+    qDebug() << "Can't make context current.";
+  }
 
-            if (!context.makeCurrent(&surface))
-            {
-              qDebug() << "Can't make context current.";
-            }
+  QOpenGLFramebufferObjectFormat f;
+  f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
+  QOpenGLFramebufferObject fbo(w, h, f);
+  m_cam.setViewPort(slm::vec2(w, h));
+  fbo.bind();
+  context.functions()->glViewport(0, 0, w, h);
 
-            QOpenGLFramebufferObjectFormat f;
-            f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
-            int w = 16, h = 32;
-            QOpenGLFramebufferObject fbo(w, h, f);
-            m_cam.setViewPort(slm::vec2(w, h));
-            fbo.bind();
-            context.functions()->glViewport(0, 0, w, h);
+  glEnable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  glDepthFunc(GL_LESS);
+  glEnable(GL_CULL_FACE);
 
-            glEnable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-            glDepthFunc(GL_LESS);
-            glEnable(GL_CULL_FACE);
+  m_drawHelper = false;
+  paintGL();
+  m_drawHelper = true;
 
-            m_drawHelper = false;
-            paintGL();
-            m_drawHelper = true;
-
-            cb(fbo.toImage(true));
-            m_cam.setViewPort(slm::vec2(width(), height()));
-          });
+  auto i = fbo.toImage(true);
+  m_cam.setViewPort(slm::vec2(width(), height()));
+  return i;
 }

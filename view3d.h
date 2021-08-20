@@ -37,7 +37,7 @@ public:
   void show_in_scene(std::unique_ptr<RenderObject>) final;
   void on_tick(const Tick &) final;
 
-  void onSaveImg(const std::function<void(const QImage &)> &cb);
+  QImage toImage(int w, int h);
 
 protected:
   void initializeGL() final;
