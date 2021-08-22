@@ -17,6 +17,7 @@ find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 
 add_executable(Cubes3D
+    aabb.cpp
     main.cpp
     slm/mat4.cpp
     slm/float_util.cpp
