@@ -261,8 +261,11 @@ void View3D::applyCursor()
     setCursor(Qt::ArrowCursor);
 }
 
-QImage View3D::toImage(int w, int h)
+QImage View3D::toImage(double t, int w, int h)
 {
+  for (const auto &ticker : m_ticker)
+    ticker(t);
+
   QOpenGLContext context;
   context.setShareContext(this->context());
   if (!context.create())

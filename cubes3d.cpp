@@ -22,8 +22,9 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->spTopBottom->restoreState(s.value("Main/TopBottomSplitter").toByteArray());
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
-    const int w = 32, h = 64, s = 4;
-    ui->label->setPixmap(QPixmap::fromImage(ui->view3d->toImage(w, h)).scaled(w * s, h * s));
+    m_animation.clear();
+    for (int i = 0; i < 10; ++i)
+      m_animation << QPixmap::fromImage(ui->view3d->toImage(double(i) / 10.0, w, h));
   });
 
   QTimer::singleShot(10, this, [this] {
@@ -35,6 +36,8 @@ Cubes3D::Cubes3D(QWidget *parent)
   new FeSyntaxHighlighter(ui->teFeIn->document());
 
   connect(ui->teFeIn, &QTextEdit::cursorPositionChanged, this, &Cubes3D::highlightBraces);
+
+  startTimer(1000 / 20);
 }
 
 Cubes3D::~Cubes3D()
@@ -52,6 +55,15 @@ void Cubes3D::closeEvent(QCloseEvent *e)
   s.setValue("Main/TopBottomSplitter", ui->spTopBottom->saveState());
 
   QMainWindow::closeEvent(e);
+}
+
+void Cubes3D::timerEvent(QTimerEvent *t)
+{
+  if (m_animation.empty())
+    return;
+
+  ui->label->setPixmap(m_animation[m_animationStep % m_animation.size()].scaled(w * s, h * s));
+  ++m_animationStep;
 }
 
 void Cubes3D::highlightBraces()
