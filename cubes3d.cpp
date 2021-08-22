@@ -17,9 +17,9 @@ Cubes3D::Cubes3D(QWidget *parent)
   QSettings s;
   restoreGeometry(s.value("Main/geomtry").toByteArray());
   restoreState(s.value("Main/state").toByteArray());
-  ui->spCodeScene->restoreState(s.value("Main/CodeSceneSplitter").toByteArray());
-  ui->spLogImg->restoreState(s.value("Main/LogImgSplitter").toByteArray());
-  ui->spTopBottom->restoreState(s.value("Main/TopBottomSplitter").toByteArray());
+  ui->spTexts->restoreState(s.value("Main/spTexts").toByteArray());
+  ui->spViews->restoreState(s.value("Main/spViews").toByteArray());
+  ui->spLeftRight->restoreState(s.value("Main/spLeftRight").toByteArray());
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
     m_animation.clear();
@@ -50,9 +50,9 @@ void Cubes3D::closeEvent(QCloseEvent *e)
   QSettings s;
   s.setValue("Main/geomtry", saveGeometry());
   s.setValue("Main/state", saveState());
-  s.setValue("Main/CodeSceneSplitter", ui->spCodeScene->saveState());
-  s.setValue("Main/LogImgSplitter", ui->spLogImg->saveState());
-  s.setValue("Main/TopBottomSplitter", ui->spTopBottom->saveState());
+  s.setValue("Main/spTexts", ui->spTexts->saveState());
+  s.setValue("Main/spViews", ui->spViews->saveState());
+  s.setValue("Main/spLeftRight", ui->spLeftRight->saveState());
 
   QMainWindow::closeEvent(e);
 }
@@ -62,7 +62,7 @@ void Cubes3D::timerEvent(QTimerEvent *t)
   if (m_animation.empty())
     return;
 
-  ui->label->setPixmap(m_animation[m_animationStep % m_animation.size()].scaled(w * s, h * s));
+  ui->laPixelPreview->setPixmap(m_animation[m_animationStep % m_animation.size()].scaled(w * s, h * s));
   ++m_animationStep;
 }
 

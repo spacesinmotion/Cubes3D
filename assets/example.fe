@@ -1,5 +1,3 @@
-
-
 (= body (fn (a)
   (translate a
     (cube (vec3 0.4 0.25 0.45) (color 174 196 231)))))
