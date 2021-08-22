@@ -2,11 +2,13 @@
 
 #include <algorithm>
 
-Camera::Camera() : m_viewPort(640, 480), m_xRot(45.0f) {}
+Camera::Camera()
+  : m_viewPort(640, 480)
+  , m_xRot(45.0f)
+{}
 
 void Camera::tick()
-{
-}
+{}
 
 const slm::vec2 &Camera::viewPort() const
 {

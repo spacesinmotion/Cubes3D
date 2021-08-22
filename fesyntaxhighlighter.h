@@ -23,4 +23,4 @@ private:
   QVector<HighlightingRule> highlightingRules;
 };
 
-#endif  // FESYNTAXHIGHLIGHTER_H
+#endif // FESYNTAXHIGHLIGHTER_H

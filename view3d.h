@@ -1,26 +1,26 @@
 #ifndef VIEW3D_H
 #define VIEW3D_H
 
+#include "SceneHandler.h"
+#include "camera.h"
+#include "displayobject.h"
+#include "renderobject.h"
+
 #include <QElapsedTimer>
 #include <QOpenGLFunctions>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
 #include <memory>
 
-#include "SceneHandler.h"
-#include "camera.h"
-#include "displayobject.h"
-#include "renderobject.h"
-
 class DisplayObject;
 class OverlayObject;
 class Ray;
 
 class View3D
-    : public QOpenGLWidget,
-      public PrimitiveProvider,
-      public SceneHandler,
-      protected QOpenGLFunctions
+  : public QOpenGLWidget
+  , public PrimitiveProvider
+  , public SceneHandler
+  , protected QOpenGLFunctions
 {
 public:
   explicit View3D(QWidget *parent = nullptr);

@@ -1,9 +1,9 @@
 #ifndef CUBES3D_H
 #define CUBES3D_H
 
-#include <QMainWindow>
-
 #include "fewrap.h"
+
+#include <QMainWindow>
 
 namespace Ui
 {
@@ -37,4 +37,4 @@ private:
   FeWrap m_feWrap;
 };
 
-#endif  // CUBES3D_H
+#endif // CUBES3D_H

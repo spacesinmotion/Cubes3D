@@ -1,9 +1,10 @@
 #ifndef GEOMETRY_H
 #define GEOMETRY_H
 
+#include "slm/vec3.h"
+
 #include <memory>
 #include <vector>
-#include "slm/vec3.h"
 
 class Geometry
 {
@@ -25,4 +26,4 @@ public:
 
 using GeometryPtr = std::unique_ptr<Geometry>;
 
-#endif  // GEOMETRY_H
+#endif // GEOMETRY_H

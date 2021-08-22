@@ -1,11 +1,11 @@
 #ifndef RENDEROBJECT_H
 #define RENDEROBJECT_H
 
+#include "displayobject.h"
+
 #include <QColor>
 #include <QMatrix4x4>
 #include <memory>
-
-#include "displayobject.h"
 
 using s_float = std::shared_ptr<float>;
 inline s_float shared(float f)
@@ -72,8 +72,12 @@ class ScaleContainer : public RenderContainer
 {
 public:
   ScaleContainer() = default;
-  ScaleContainer(const s_vec3 &s) : m_scale{s} {}
-  ScaleContainer(const slm::vec3 &s) : m_scale{shared(s)} {}
+  ScaleContainer(const s_vec3 &s)
+    : m_scale{s}
+  {}
+  ScaleContainer(const slm::vec3 &s)
+    : m_scale{shared(s)}
+  {}
 
   void set_scale(const s_vec3 &s) { m_scale = s; }
   void set_scale(const slm::vec3 &s) { set_scale(shared(s)); }
@@ -88,8 +92,12 @@ class TranslateContainer : public RenderContainer
 {
 public:
   TranslateContainer() = default;
-  TranslateContainer(const s_vec3 &t) : m_translate{t} {}
-  TranslateContainer(const slm::vec3 &t) : m_translate{shared(t)} {}
+  TranslateContainer(const s_vec3 &t)
+    : m_translate{t}
+  {}
+  TranslateContainer(const slm::vec3 &t)
+    : m_translate{shared(t)}
+  {}
 
   void set_translate(const s_vec3 &t) { m_translate = t; }
   void set_translate(const slm::vec3 &t) { set_translate(shared(t)); }
@@ -104,8 +112,14 @@ class RotateContainer : public RenderContainer
 {
 public:
   RotateContainer() = default;
-  RotateContainer(s_float a, const s_vec3 &t) : m_angle{a}, m_axis{t} {}
-  RotateContainer(s_float a, const slm::vec3 &t) : m_angle{a}, m_axis{shared(t)} {}
+  RotateContainer(s_float a, const s_vec3 &t)
+    : m_angle{a}
+    , m_axis{t}
+  {}
+  RotateContainer(s_float a, const slm::vec3 &t)
+    : m_angle{a}
+    , m_axis{shared(t)}
+  {}
 
   void set_rotate(s_float a, const s_vec3 &ax)
   {
@@ -123,4 +137,4 @@ private:
   s_vec3 m_axis{shared(slm::vec3(1.0))};
 };
 
-#endif  // RENDEROBJECT_H
+#endif // RENDEROBJECT_H

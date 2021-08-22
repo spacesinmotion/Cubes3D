@@ -1,14 +1,16 @@
 #include "cubes3d.h"
 
-#include <QFileDialog>
-#include <QSettings>
-#include <QTimer>
-#include <QShortcut>
-
 #include "fesyntaxhighlighter.h"
 #include "ui_cubes3d.h"
 
-Cubes3D::Cubes3D(QWidget *parent) : QMainWindow(parent), ui(new Ui::Cubes3D)
+#include <QFileDialog>
+#include <QSettings>
+#include <QShortcut>
+#include <QTimer>
+
+Cubes3D::Cubes3D(QWidget *parent)
+  : QMainWindow(parent)
+  , ui(new Ui::Cubes3D)
 {
   ui->setupUi(this);
 
@@ -19,18 +21,16 @@ Cubes3D::Cubes3D(QWidget *parent) : QMainWindow(parent), ui(new Ui::Cubes3D)
   ui->spLogImg->restoreState(s.value("Main/LogImgSplitter").toByteArray());
   ui->spTopBottom->restoreState(s.value("Main/TopBottomSplitter").toByteArray());
 
-  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this]
-          {
-            const int w = 32, h = 64, s = 4;
-            ui->label->setPixmap(QPixmap::fromImage(ui->view3d->toImage(w, h)).scaled(w * s, h * s));
-          });
+  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
+    const int w = 32, h = 64, s = 4;
+    ui->label->setPixmap(QPixmap::fromImage(ui->view3d->toImage(w, h)).scaled(w * s, h * s));
+  });
 
-  QTimer::singleShot(10, this, [this]
-                     {
-                       const auto recent = QSettings().value("Main/RecentFiles").toStringList();
-                       if (!recent.isEmpty())
-                         open_file(recent.front());
-                     });
+  QTimer::singleShot(10, this, [this] {
+    const auto recent = QSettings().value("Main/RecentFiles").toStringList();
+    if (!recent.isEmpty())
+      open_file(recent.front());
+  });
 
   new FeSyntaxHighlighter(ui->teFeIn->document());
 

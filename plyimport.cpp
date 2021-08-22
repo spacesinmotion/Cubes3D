@@ -1,11 +1,12 @@
 #include "plyimport.h"
 
+#include "rply/rply.h"
+
 #include <cassert>
 #include <clocale>
 
-#include "rply/rply.h"
-
-plyImport::plyImport(const char *plyFile) : m_file(nullptr)
+plyImport::plyImport(const char *plyFile)
+  : m_file(nullptr)
 {
   m_file = ply_open(plyFile, 0, 0, 0);
   if (m_file && !ply_read_header(m_file))

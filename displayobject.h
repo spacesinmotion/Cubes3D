@@ -17,12 +17,12 @@ public:
 
   void draw(QOpenGLShaderProgram &program);
 
-private:  // helper
+private: // helper
   void init();
 
   bool isInitialized() const;
 
-private:  // data
+private: // data
   QString m_filename;
 
   QOpenGLBuffer m_arrayBuf;
@@ -36,4 +36,4 @@ using WeakDisplayObject = std::weak_ptr<DisplayObject>;
 using SharedDisplayObject = std::shared_ptr<DisplayObject>;
 using UniqueDisplayObject = std::weak_ptr<DisplayObject>;
 
-#endif  // DISPAYOBJECT_H
+#endif // DISPAYOBJECT_H

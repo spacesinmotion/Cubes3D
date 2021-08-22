@@ -25,4 +25,4 @@ private:
   int m_vertexAttribute;
 };
 
-#endif  // OVERLAYPAINTER_H
+#endif // OVERLAYPAINTER_H

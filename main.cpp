@@ -1,6 +1,7 @@
+#include "cubes3d.h"
+
 #include <QApplication>
 #include <QSettings>
-#include "cubes3d.h"
 
 int main(int argc, char *argv[])
 {

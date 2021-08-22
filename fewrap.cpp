@@ -1,10 +1,10 @@
 #include "fewrap.h"
 
-#include <QDebug>
-#include <variant>
-
 #include "SceneHandler.h"
 #include "renderobject.h"
+
+#include <QDebug>
+#include <variant>
 
 extern "C"
 {
@@ -35,20 +35,17 @@ static QString from_string(fe_Context *ctx, fe_Object *o)
   return t;
 }
 
-template <typename T>
-fe_Object *custom(fe_Context *ctx, T o)
+template <typename T> fe_Object *custom(fe_Context *ctx, T o)
 {
   return fe_ptr(ctx, new CustomPtr{std::move(o)});
 }
 
-template <typename T, typename... Args>
-fe_Object *create_custom(fe_Context *ctx, Args &&...args)
+template <typename T, typename... Args> fe_Object *create_custom(fe_Context *ctx, Args &&...args)
 {
   return custom(ctx, new T(std::forward<Args>(args)...));
 }
 
-template <typename T>
-static bool is(fe_Context *ctx, fe_Object *o)
+template <typename T> static bool is(fe_Context *ctx, fe_Object *o)
 {
   if (fe_type(ctx, o) == FE_TPTR)
     if (auto *p = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)))
@@ -56,8 +53,7 @@ static bool is(fe_Context *ctx, fe_Object *o)
   return false;
 }
 
-template <typename T>
-static T get(fe_Context *ctx, fe_Object *o)
+template <typename T> static T get(fe_Context *ctx, fe_Object *o)
 {
   if (!is<T>(ctx, o))
   {
@@ -98,7 +94,9 @@ static RenderObjectPtr _uobj(fe_Context *ctx, fe_Object *o)
   return std::move(std::get<RenderObjectPtr>(*custom));
 }
 
-FeWrap::FeWrap() : m_data{malloc(m_size)}, m_fe{fe_open(m_data, m_size)}
+FeWrap::FeWrap()
+  : m_data{malloc(m_size)}
+  , m_fe{fe_open(m_data, m_size)}
 {
   init_fn(m_fe);
 }
@@ -388,13 +386,13 @@ fe_Object *FeWrap::_scale(fe_Context *ctx, fe_Object *arg)
   return custom(ctx, std::move(c));
 }
 
-template <typename T>
-fe_Object *_lfo_i(fe_Context *ctx, T center, T amp, float frequency)
+template <typename T> fe_Object *_lfo_i(fe_Context *ctx, T center, T amp, float frequency)
 {
   auto value = shared(center);
 
-  _scene(ctx)->on_tick([value, center, amp, frequency](auto t)
-                       { *value = center + amp * float(sin(double(t) * M_PI * 2.0 * double(frequency))); });
+  _scene(ctx)->on_tick([value, center, amp, frequency](auto t) {
+    *value = center + amp * float(sin(double(t) * M_PI * 2.0 * double(frequency)));
+  });
 
   return custom(ctx, value);
 }

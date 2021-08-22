@@ -18,11 +18,20 @@ public: // getter
   slm::mat4 modelView() const;
   slm::mat4 rotation() const;
 
-  float zoom() const { return m_zoom; }
+  float zoom() const
+  {
+    return m_zoom;
+  }
 
 public: // setter
-  void setViewPort(const slm::vec2 &s) { m_viewPort = s; }
-  void setViewCenter(const slm::vec3 &c) { m_center = c; }
+  void setViewPort(const slm::vec2 &s)
+  {
+    m_viewPort = s;
+  }
+  void setViewCenter(const slm::vec3 &c)
+  {
+    m_center = c;
+  }
 
   void translationEvent(const slm::vec2 &move2D);
   void rotationEvent(const slm::vec2 &move2D);

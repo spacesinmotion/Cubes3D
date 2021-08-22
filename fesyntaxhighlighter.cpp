@@ -1,6 +1,7 @@
 #include "fesyntaxhighlighter.h"
 
-FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent) : QSyntaxHighlighter(parent)
+FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent)
+  : QSyntaxHighlighter(parent)
 {
   HighlightingRule rule;
   const QString groupPatterns[] = {

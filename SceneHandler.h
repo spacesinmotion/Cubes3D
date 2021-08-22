@@ -18,4 +18,4 @@ public:
   virtual void on_tick(const Tick &) = 0;
 };
 
-#endif  // SCENEHANDLER_H
+#endif // SCENEHANDLER_H

@@ -1,8 +1,9 @@
 #ifndef PLYIMPORT_H
 #define PLYIMPORT_H
 
-#include <memory>
 #include "geometry.h"
+
+#include <memory>
 
 typedef struct t_ply_ *p_ply;
 
@@ -19,4 +20,4 @@ private:
   p_ply m_file;
 };
 
-#endif  // PLYIMPORT_H
+#endif // PLYIMPORT_H

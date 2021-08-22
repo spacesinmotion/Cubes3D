@@ -1,0 +1,14 @@
+﻿---
+BasedOnStyle: Microsoft
+IndentWidth: 2
+ConstructorInitializerIndentWidth: 2
+BreakConstructorInitializers: BeforeComma
+BreakInheritanceList: BeforeComma
+IncludeBlocks: Regroup
+BreakBeforeBraces: Custom
+BraceWrapping:
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+AllowShortFunctionsOnASingleLine: Inline
+...

@@ -1,17 +1,18 @@
 #include "view3d.h"
 
+#include "ray.h"
+
 #include <QApplication>
 #include <QDebug>
+#include <QFileInfo>
 #include <QMouseEvent>
 #include <QOffscreenSurface>
 #include <QOpenGLFramebufferObject>
 #include <QPainter>
 #include <QShortcut>
-#include <QFileInfo>
 
-#include "ray.h"
-
-View3D::View3D(QWidget *parent) : QOpenGLWidget(parent)
+View3D::View3D(QWidget *parent)
+  : QOpenGLWidget(parent)
 {
   setMouseTracking(true);
   setFocusPolicy(Qt::StrongFocus);
@@ -41,14 +42,10 @@ void View3D::initializeGL()
 
   m_cam.setViewCenter(slm::vec3(0, 0, 2));
 
-  connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this]
-          { m_cam.set_front(); });
-  connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this]
-          { m_cam.set_right(); });
-  connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this]
-          { m_cam.set_left(); });
-  connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this]
-          { m_cam.set_back(); });
+  connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this] { m_cam.set_front(); });
+  connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this] { m_cam.set_right(); });
+  connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this] { m_cam.set_left(); });
+  connect(new QShortcut(Qt::Key_8, this), &QShortcut::activated, this, [this] { m_cam.set_back(); });
 
   startTimer(16);
   m_timer.start();
@@ -75,12 +72,12 @@ void View3D::paintGL()
     drawLine(Qt::red, {slm::vec3(0), slm::transpose(m_cam.rotation())[0].xyz() / m_cam.zoom()});
     drawLine(Qt::green, {slm::vec3(0), slm::transpose(m_cam.rotation())[1].xyz() / m_cam.zoom()});
 
-    drawLine(
-        Qt::lightGray,
-        {slm::vec3(-1.0, -1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(-1.0, -1.0, 4.0), slm::vec3(-1.0, 1.0, 4.0),
-         slm::vec3(-1.0, 1.0, 4.0), slm::vec3(1.0, 1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(1.0, 1.0, 4.0),
-         slm::vec3(-1.0, -1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(-1.0, -1.0, 0.0), slm::vec3(-1.0, 1.0, 0.0),
-         slm::vec3(-1.0, 1.0, 0.0), slm::vec3(1.0, 1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(1.0, 1.0, 0.0)});
+    drawLine(Qt::lightGray,
+             {slm::vec3(-1.0, -1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(-1.0, -1.0, 4.0),
+              slm::vec3(-1.0, 1.0, 4.0), slm::vec3(-1.0, 1.0, 4.0), slm::vec3(1.0, 1.0, 4.0), slm::vec3(1.0, -1.0, 4.0),
+              slm::vec3(1.0, 1.0, 4.0), slm::vec3(-1.0, -1.0, 0.0), slm::vec3(1.0, -1.0, 0.0),
+              slm::vec3(-1.0, -1.0, 0.0), slm::vec3(-1.0, 1.0, 0.0), slm::vec3(-1.0, 1.0, 0.0),
+              slm::vec3(1.0, 1.0, 0.0), slm::vec3(1.0, -1.0, 0.0), slm::vec3(1.0, 1.0, 0.0)});
   }
   drawObjects();
 

@@ -4,7 +4,9 @@
 
 PrimitiveProvider *RenderObject::primitives{nullptr};
 
-RenderDisplayObject::RenderDisplayObject(const SharedDisplayObject &o) : m_displayObject(o) {}
+RenderDisplayObject::RenderDisplayObject(const SharedDisplayObject &o)
+  : m_displayObject(o)
+{}
 
 void RenderDisplayObject::draw(QOpenGLShaderProgram &program, const QMatrix4x4 &t)
 {

@@ -1,13 +1,13 @@
 #include "overlaypainter.h"
 
+#include <QColor>
 #include <slm/vec2.h>
 
-#include <QColor>
-
 OverlayPainter::OverlayPainter()
-  : m_mvpUniform(-1), m_colorUniform(-1), m_vertexAttribute(-1)
-{
-}
+  : m_mvpUniform(-1)
+  , m_colorUniform(-1)
+  , m_vertexAttribute(-1)
+{}
 
 void OverlayPainter::begin(int w, int h)
 {
@@ -37,14 +37,14 @@ void OverlayPainter::draw()
   float r = 45;
 
   std::vector<slm::vec2> circleCoords;
-  for (int i = 0; i < 360; i += 15) {
+  for (int i = 0; i < 360; i += 15)
+  {
     const auto angleRAD = slm::radians(i);
     circleCoords.emplace_back(x + r * cos(angleRAD), y + r * sin(angleRAD));
   }
 
   m_program.enableAttributeArray(m_vertexAttribute);
-  m_program.setAttributeArray(m_vertexAttribute, GL_FLOAT,
-                              (GLfloat*)circleCoords.data(), 2, 0);
+  m_program.setAttributeArray(m_vertexAttribute, GL_FLOAT, (GLfloat *)circleCoords.data(), 2, 0);
   glDrawArrays(GL_TRIANGLE_FAN, 0, (GLsizei)circleCoords.size());
   m_program.disableAttributeArray(m_vertexAttribute);
 }
@@ -53,12 +53,10 @@ void OverlayPainter::initShader()
 {
   initializeOpenGLFunctions();
 
-  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Vertex,
-                                         "shader/overlay.vert"))
+  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Vertex, "shader/overlay.vert"))
     throw std::runtime_error("error compile overlay vertex shader");
 
-  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Fragment,
-                                         "shader/overlay.frag"))
+  if (!m_program.addShaderFromSourceFile(QOpenGLShader::Fragment, "shader/overlay.frag"))
     throw std::runtime_error("error compile overlay fragment shader");
 
   if (!m_program.link())
