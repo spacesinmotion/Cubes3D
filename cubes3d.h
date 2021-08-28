@@ -25,6 +25,9 @@ private slots:
   void on_actionopen_triggered();
   void on_actionsave_triggered();
 
+  void on_menuRecent_aboutToShow();
+  void on_actionclearRecent_triggered();
+
 private:
   void closeEvent(QCloseEvent *e);
   void timerEvent(QTimerEvent *t);

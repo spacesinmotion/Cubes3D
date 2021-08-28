@@ -102,9 +102,18 @@
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuRecent">
+     <property name="title">
+      <string>Recent</string>
+     </property>
+     <addaction name="separator"/>
+     <addaction name="actionclearRecent"/>
+    </widget>
     <addaction name="actionopen"/>
     <addaction name="separator"/>
     <addaction name="actionsave"/>
+    <addaction name="separator"/>
+    <addaction name="menuRecent"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -119,6 +128,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionclearRecent">
+   <property name="text">
+    <string>clear</string>
    </property>
   </action>
  </widget>

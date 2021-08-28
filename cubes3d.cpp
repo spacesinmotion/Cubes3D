@@ -135,6 +135,13 @@ void Cubes3D::open_file(const QString &f)
     ui->teFeIn->setText(fi.readAll());
     eval_text(fe);
   }
+
+  QSettings s;
+  auto recent = s.value("Main/RecentFiles").toStringList();
+  recent.removeAll(f);
+  recent.prepend(f);
+  s.setValue("Main/RecentFiles", recent);
+
   QApplication::restoreOverrideCursor();
 }
 
@@ -143,12 +150,6 @@ void Cubes3D::on_actionopen_triggered()
   auto f = QFileDialog::getOpenFileName(this, tr("Open scene file"), m_feFile, tr("Scene (*.fe)"));
   if (f.isEmpty())
     return;
-
-  QSettings s;
-  auto recent = s.value("Main/RecentFiles").toStringList();
-  recent.removeAll(f);
-  recent.prepend(f);
-  s.setValue("Main/RecentFiles", recent);
 
   open_file(f);
 }
@@ -201,4 +202,26 @@ void Cubes3D::on_actionsave_triggered()
       f.write(fe.toLocal8Bit());
   }
   QApplication::restoreOverrideCursor();
+}
+
+void Cubes3D::on_menuRecent_aboutToShow()
+{
+  auto files = ui->menuRecent->actions();
+  files.pop_back();
+  auto *sep = files.back();
+  files.pop_back();
+  qDeleteAll(files);
+  files.clear();
+
+  for (const auto f : QSettings().value("Main/RecentFiles").toStringList())
+  {
+    files << new QAction(QFileInfo(f).fileName());
+    connect(files.back(), &QAction::triggered, this, [this, f] { open_file(f); });
+  }
+  ui->menuRecent->insertActions(sep, files);
+}
+
+void Cubes3D::on_actionclearRecent_triggered()
+{
+  QSettings().setValue("Main/RecentFiles", QStringList{});
 }
