@@ -126,6 +126,7 @@ void View3D::clear_scene()
 {
   m_scene = std::make_unique<RenderContainer>();
   m_ticker.clear();
+  m_timer.restart();
 }
 
 void View3D::show_in_scene(std::unique_ptr<RenderObject> ro)

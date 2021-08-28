@@ -4,7 +4,9 @@
 #include "renderobject.h"
 
 #include <QDebug>
+#include <string>
 #include <variant>
+#include <vector>
 
 extern "C"
 {
@@ -64,10 +66,67 @@ template <typename T> static T get(fe_Context *ctx, fe_Object *o)
   return std::get<T>(*reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)));
 }
 
+static SceneHandler *_scene(fe_Context *ctx)
+{
+  return get<SceneHandler *>(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
+}
+
+static std::vector<std::string> keys;
+std::string unique_key()
+{
+  static int count = 0;
+
+  std::string key;
+  if (keys.empty())
+  {
+    key = "__g_" + std::to_string(count++);
+  }
+  else
+  {
+    key = keys.back();
+    keys.pop_back();
+  }
+  return key;
+}
+
+template <typename R> std::shared_ptr<R> shared_d(fe_Context *ctx, fe_Object *o, const R &v)
+{
+  const auto key = unique_key();
+  int gc = fe_savegc(ctx);
+  fe_set(ctx, fe_symbol(ctx, key.c_str()), o);
+  fe_restoregc(ctx, gc);
+
+  auto r = shared(v, [ctx, key](auto *x) {
+    delete x;
+    int gc = fe_savegc(ctx);
+    fe_set(ctx, fe_symbol(ctx, key.c_str()), fe_bool(ctx, false));
+    fe_restoregc(ctx, gc);
+    keys.push_back(key);
+  });
+  return r;
+}
+
 static s_float s_number(fe_Context *ctx, fe_Object *o)
 {
   if (is<s_float>(ctx, o))
     return get<s_float>(ctx, o);
+
+  if (fe_type(ctx, o) == FE_TFUNC)
+  {
+    auto r = shared_d(ctx, o, 0.0f);
+
+    _scene(ctx)->on_tick([r, ctx, o](auto t) {
+      int gc = fe_savegc(ctx);
+
+      fe_Object *objs[2];
+      objs[0] = o;
+      objs[1] = fe_number(ctx, t);
+      *r = fe_tonumber(ctx, fe_eval(ctx, fe_list(ctx, objs, 2)));
+
+      fe_restoregc(ctx, gc);
+    });
+    return r;
+  }
 
   return shared(fe_tonumber(ctx, o));
 }
@@ -77,12 +136,22 @@ static s_vec3 s_vec(fe_Context *ctx, fe_Object *o)
   if (is<s_vec3>(ctx, o))
     return get<s_vec3>(ctx, o);
 
-  return shared(get<slm::vec3>(ctx, o));
-}
+  if (fe_type(ctx, o) == FE_TFUNC)
+  {
+    auto r = shared_d(ctx, o, slm::vec3(0.0));
+    _scene(ctx)->on_tick([r, ctx, o](auto t) {
+      int gc = fe_savegc(ctx);
 
-static SceneHandler *_scene(fe_Context *ctx)
-{
-  return get<SceneHandler *>(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
+      fe_Object *objs[2];
+      objs[0] = o;
+      objs[1] = fe_number(ctx, t);
+      *r = get<slm::vec3>(ctx, fe_eval(ctx, fe_list(ctx, objs, 2)));
+      fe_restoregc(ctx, gc);
+    });
+    return r;
+  }
+
+  return shared(get<slm::vec3>(ctx, o));
 }
 
 static RenderObjectPtr _uobj(fe_Context *ctx, fe_Object *o)
@@ -136,11 +205,12 @@ QString FeWrap::eval(const QString &fe, SceneHandler &sh)
 
   sh.clear_scene();
 
+  int gcx = fe_savegc(m_fe);
   fe_set(m_fe, fe_symbol(m_fe, "scene"), custom(m_fe, &sh));
 
-  int gc = fe_savegc(m_fe);
   QString last_text;
 
+  int gc = fe_savegc(m_fe);
   for (;;)
   {
     auto *r = fe_read(m_fe, read_fn, &it);
@@ -153,7 +223,7 @@ QString FeWrap::eval(const QString &fe, SceneHandler &sh)
     fe_restoregc(m_fe, gc);
   }
 
-  fe_set(m_fe, fe_symbol(m_fe, "scene"), nullptr);
+  fe_restoregc(m_fe, gcx);
 
   setlocale(LC_ALL, "");
   return last_text;
@@ -322,9 +392,7 @@ fe_Object *FeWrap::_group(fe_Context *ctx, fe_Object *arg)
 fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<TranslateContainer>(s_vec(ctx, fe_nextarg(ctx, &arg)));
-
   add_all(*c, ctx, &arg);
-
   return custom(ctx, std::move(c));
 }
 

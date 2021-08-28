@@ -48,7 +48,7 @@ private:
   static void init_fn(fe_Context *ctx);
 
 private:
-  static const int m_size{1024 * 1024};
+  static const int m_size{1024 * 100};
   void *m_data{nullptr};
   fe_Context *m_fe{nullptr};
 };

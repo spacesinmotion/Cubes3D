@@ -8,15 +8,17 @@
 #include <memory>
 
 using s_float = std::shared_ptr<float>;
-inline s_float shared(float f)
+using s_float_deleter = std::function<void(float *)>;
+inline s_float shared(float f, const s_float_deleter &d = std::default_delete<float>{})
 {
-  return std::make_shared<float>(f);
+  return std::shared_ptr<float>(new float(f), d);
 }
 
 using s_vec3 = std::shared_ptr<slm::vec3>;
-inline s_vec3 shared(slm::vec3 f)
+using s_vec3_deleter = std::function<void(slm::vec3 *)>;
+inline s_vec3 shared(const slm::vec3 &f, const s_vec3_deleter &d = std::default_delete<slm::vec3>{})
 {
-  return std::make_shared<slm::vec3>(f);
+  return std::shared_ptr<slm::vec3>(new slm::vec3(f), d);
 }
 
 class QOpenGLShaderProgram;
