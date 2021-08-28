@@ -18,7 +18,7 @@
       (cube (vec3 0.16 0.16 0.4) (color 126 127 165))))))
 
 (= guy (fn (freq)
-  (rotateZ (fn (t) (deg (abs (% t (/ pi 2)))))
+  (rotateZ 0
     (translate (vec3 0 0 0)
       (translate (vec3 0 0.03 2.05)
         (head freq))
@@ -36,4 +36,4 @@
           (leg freq -1)))))))
 
 (show
-  (guy 1))
+  (guy 3))

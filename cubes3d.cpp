@@ -4,6 +4,7 @@
 #include "ui_cubes3d.h"
 
 #include <QFileDialog>
+#include <QPainter>
 #include <QSettings>
 #include <QShortcut>
 #include <QTimer>
@@ -23,8 +24,15 @@ Cubes3D::Cubes3D(QWidget *parent)
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
     m_animation.clear();
-    for (int i = 0; i < 10; ++i)
-      m_animation << QPixmap::fromImage(ui->view3d->toImage(double(i) / 10.0, w, h));
+    for (int i = 0; i < 20; ++i)
+    {
+      m_animation << QPixmap::fromImage(ui->view3d->toImage(double(i) / 20.0, w, h));
+      QPainter p(&m_animation.back());
+      p.drawLine(0, 0, int(i / 20.0 * w), 0);
+      p.drawPoint(w - 1, h - 1);
+      p.drawPoint(0, h - 1);
+      p.drawPoint(w - 1, 0);
+    }
   });
 
   QTimer::singleShot(10, this, [this] {
