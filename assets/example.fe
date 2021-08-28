@@ -35,5 +35,7 @@
         (translate (vec3 -0.185 0 0)
           (leg freq -1)))))))
 
+(animation "guy" (guy 3))
+
 (show
   (guy 3))

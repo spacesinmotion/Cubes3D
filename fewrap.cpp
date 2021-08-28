@@ -203,8 +203,6 @@ QString FeWrap::eval(const QString &fe, SceneHandler &sh)
   const auto fet = fe.toLocal8Bit();
   auto it = fet.begin();
 
-  sh.clear_scene();
-
   int gcx = fe_savegc(m_fe);
   fe_set(m_fe, fe_symbol(m_fe, "scene"), custom(m_fe, &sh));
 
@@ -274,9 +272,10 @@ static void format__(fe_Context *ctx, fe_Object *o, QString &out, bool force_no_
 
   if (fe_type(ctx, o) != FE_TPAIR)
   {
+    const auto q = fe_type(ctx, o) == FE_TSTRING ? "\"" : "";
     if (need_space)
       out += " ";
-    out += from_string(ctx, o);
+    out += q + from_string(ctx, o) + q;
     return;
   }
 
@@ -399,22 +398,21 @@ void FeWrap::add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg)
     c.add(_uobj(ctx, fe_nextarg(ctx, arg)));
 }
 
-fe_Object *FeWrap::_clear(fe_Context *ctx, fe_Object *arg)
-{
-  if (!fe_isnil(ctx, arg))
-    fe_error(ctx, "to many arguments for 'clear'");
-
-  _scene(ctx)->clear_scene();
-
-  return fe_bool(ctx, false);
-}
-
 fe_Object *FeWrap::_show(fe_Context *ctx, fe_Object *arg)
 {
   auto *sh = _scene(ctx);
 
   while (!fe_isnil(ctx, arg))
     sh->show_in_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
+
+  return fe_bool(ctx, false);
+}
+
+fe_Object *FeWrap::_animation(fe_Context *ctx, fe_Object *arg)
+{
+  auto *sh = _scene(ctx);
+  const auto name = from_string(ctx, fe_nextarg(ctx, &arg));
+  sh->add_animation(name, _uobj(ctx, fe_nextarg(ctx, &arg)));
 
   return fe_bool(ctx, false);
 }
@@ -574,7 +572,6 @@ void FeWrap::init_fn(fe_Context *ctx)
   fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, _cube));
   fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, _group));
 
-  fe_set(ctx, fe_symbol(ctx, "clear"), fe_cfunc(ctx, _clear));
   fe_set(ctx, fe_symbol(ctx, "show"), fe_cfunc(ctx, _show));
 
   fe_set(ctx, fe_symbol(ctx, "lfo"), fe_cfunc(ctx, _lfo));
@@ -585,4 +582,6 @@ void FeWrap::init_fn(fe_Context *ctx)
   fe_set(ctx, fe_symbol(ctx, "rotateY"), fe_cfunc(ctx, _rotateY));
   fe_set(ctx, fe_symbol(ctx, "rotateZ"), fe_cfunc(ctx, _rotateZ));
   fe_set(ctx, fe_symbol(ctx, "scale"), fe_cfunc(ctx, _scale));
+
+  fe_set(ctx, fe_symbol(ctx, "animation"), fe_cfunc(ctx, _animation));
 }

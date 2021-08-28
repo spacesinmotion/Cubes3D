@@ -159,6 +159,7 @@ bool Cubes3D::eval_text(const QString &t)
   bool ok = true;
 
   ui->teFeOut->clear();
+  ui->view3d->clear_scene();
   try
   {
     const auto out = m_feWrap.eval(t, *ui->view3d);

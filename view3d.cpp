@@ -125,6 +125,7 @@ SharedDisplayObject View3D::cube()
 void View3D::clear_scene()
 {
   m_scene = std::make_unique<RenderContainer>();
+  m_animations.clear();
   m_ticker.clear();
   m_timer.restart();
 }
@@ -132,6 +133,11 @@ void View3D::clear_scene()
 void View3D::show_in_scene(std::unique_ptr<RenderObject> ro)
 {
   m_scene->add(std::move(ro));
+}
+
+void View3D::add_animation(const QString &name, std::unique_ptr<RenderObject> o)
+{
+  m_animations.emplace_back(Animation{name, std::move(o)});
 }
 
 void View3D::on_tick(const Tick &tick)

@@ -33,8 +33,9 @@ public:
   SharedDisplayObject loadObject(const QString &path);
   SharedDisplayObject cube() final;
 
-  void clear_scene() final;
+  void clear_scene();
   void show_in_scene(std::unique_ptr<RenderObject>) final;
+  void add_animation(const QString &name, std::unique_ptr<RenderObject>) final;
   void on_tick(const Tick &) final;
 
   QImage toImage(double t, int w, int h);
@@ -77,6 +78,18 @@ private: // data
 
   QHash<QString, WeakDisplayObject> m_displayObjects;
   std::unique_ptr<RenderContainer> m_scene;
+
+  struct Animation
+  {
+    QString name;
+    std::unique_ptr<RenderObject> scene;
+
+    Animation(const QString &n, std::unique_ptr<RenderObject> s)
+      : name{n}
+      , scene{std::move(s)}
+    {}
+  };
+  std::vector<Animation> m_animations;
 
   QElapsedTimer m_timer;
   std::vector<Tick> m_ticker;
