@@ -238,7 +238,11 @@ static bool format_need_break(fe_Context *ctx, fe_Object *o)
     {
       char buffer[256] = {0};
       fe_tostring(ctx, a, buffer, 255);
-      for (const auto *key : {"vec3", "lfo", "color", "fn", "mac", "=", "+", "-", "*", "/", "<", "<="})
+      for (const auto *key : {
+               "vec3", "lfo", "color", "fn",    "mac",  "=",    "+",   "-",    "*",
+               "/",    "<",   "%",     "<=",    "sin",  "cos",  "tan", "asin", "acos",
+               "atan", "deg", "rad",   "floor", "ceil", "sqrt", "abs", "max",  "min",
+           })
         if (strcmp(buffer, key) == 0)
           return false;
     }
@@ -316,6 +320,39 @@ QString FeWrap::format(const QString &fe)
     fe_restoregc(m_fe, gc);
   }
   return made;
+}
+
+fe_Object *FeWrap::_mod(fe_Context *ctx, fe_Object *arg)
+{
+  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  while (!fe_isnil(ctx, arg))
+  {
+    const auto b = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+    a = a - std::floor(a / b) * b;
+  }
+  return fe_number(ctx, a);
+}
+
+fe_Object *FeWrap::_max(fe_Context *ctx, fe_Object *arg)
+{
+  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  while (!fe_isnil(ctx, arg))
+  {
+    const auto b = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+    a = (a < b) ? b : a;
+  }
+  return fe_number(ctx, a);
+}
+
+fe_Object *FeWrap::_min(fe_Context *ctx, fe_Object *arg)
+{
+  auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  while (!fe_isnil(ctx, arg))
+  {
+    const auto b = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+    a = (a < b) ? a : b;
+  }
+  return fe_number(ctx, a);
 }
 
 fe_Object *FeWrap::_vec3(fe_Context *ctx, fe_Object *arg)
@@ -501,6 +538,35 @@ void FeWrap::init_fn(fe_Context *ctx)
   auto *h = fe_handlers(ctx);
   h->error = on_error;
   h->gc = on_gc;
+
+  fe_set(ctx, fe_symbol(ctx, "%"), fe_cfunc(ctx, _mod));
+  fe_set(ctx, fe_symbol(ctx, "max"), fe_cfunc(ctx, _max));
+  fe_set(ctx, fe_symbol(ctx, "min"), fe_cfunc(ctx, _min));
+  fe_set(ctx, fe_symbol(ctx, "pi"), fe_number(ctx, M_PI));
+  fe_set(ctx, fe_symbol(ctx, "rad"), fe_cfunc(ctx, [](fe_Context *ctx, fe_Object *arg) {
+           const auto n = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+           return fe_number(ctx, M_PI * (n / 180.0));
+         }));
+  fe_set(ctx, fe_symbol(ctx, "deg"), fe_cfunc(ctx, [](fe_Context *ctx, fe_Object *arg) {
+           const auto n = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+           return fe_number(ctx, 180.0 * (n / M_PI));
+         }));
+
+#define _func(f)                                                                                                       \
+  fe_set(ctx, fe_symbol(ctx, #f), fe_cfunc(ctx, [](fe_Context *ctx, fe_Object *arg) {                                  \
+           const auto n = fe_tonumber(ctx, fe_nextarg(ctx, &arg));                                                     \
+           return fe_number(ctx, f(n));                                                                                \
+         }))
+  _func(floor);
+  _func(ceil);
+  _func(abs);
+  _func(sqrt);
+  _func(sin);
+  _func(cos);
+  _func(tan);
+  _func(acos);
+  _func(atan);
+  _func(atan);
 
   fe_set(ctx, fe_symbol(ctx, "vec3"), fe_cfunc(ctx, _vec3));
   fe_set(ctx, fe_symbol(ctx, "color"), fe_cfunc(ctx, _color));

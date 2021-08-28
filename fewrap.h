@@ -25,6 +25,11 @@ public:
   QString format(const QString &fe);
 
 private:
+  static fe_Object *_mod(fe_Context *ctx, fe_Object *arg);
+
+  static fe_Object *_max(fe_Context *ctx, fe_Object *arg);
+  static fe_Object *_min(fe_Context *ctx, fe_Object *arg);
+
   static fe_Object *_vec3(fe_Context *ctx, fe_Object *arg);
   static fe_Object *_color(fe_Context *ctx, fe_Object *arg);
 

@@ -44,9 +44,11 @@ FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent)
     highlightingRules.append(rule);
   }
 
-  static const char *primnames[] = {"let", "=",  "if",   "fn",    "mac",  "while",  "quote",  "and",
-                                    "or",  "do", "cons", "car",   "cdr",  "setcar", "setcdr", "list",
-                                    "not", "is", "atom", "print", "show", "add",    "clear"};
+  static const char *primnames[] = {
+      "let",    "=",      "if",   "fn",  "mac", "while", "quote", "and",  "or",  "do",    "cons", "car", "cdr",
+      "setcar", "setcdr", "list", "not", "is",  "atom",  "print", "show", "add", "clear", "sin",  "cos", "tan",
+      "asin",   "acos",   "atan", "deg", "rad", "floor", "ceil",  "sqrt", "abs", "max",   "min",
+  };
   for (const auto *pattern : primnames)
   {
     rule.pattern = QRegularExpression(QStringLiteral("\\b") + pattern + QStringLiteral("\\b"));
