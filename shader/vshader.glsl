@@ -18,7 +18,7 @@ varying vec4 vertex, normal, lightPos;
 
 void main()
 {
-  lightPos = model_view* vec4(0.0, -1.0, 4.0, 1.0);
+  lightPos = model_view* vec4(0.0, -2.0, 8.0, 2.0);
 
   vertex =  model_view * object_transformation * vec4(a_position, 1.0);
   gl_Position = projection * vertex;

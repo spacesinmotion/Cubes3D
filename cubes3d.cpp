@@ -239,6 +239,9 @@ void Cubes3D::updateAnimation()
     p.drawPoint(w - 1, h - 1);
     p.drawPoint(0, h - 1);
     p.drawPoint(w - 1, 0);
+    p.setPen(Qt::lightGray);
+    p.drawPoint(0, h / 2);
+    p.drawPoint(w - 1, h / 2);
   }
 }
 
