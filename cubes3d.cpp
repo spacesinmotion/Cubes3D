@@ -21,11 +21,14 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->spTexts->restoreState(s.value("Main/spTexts").toByteArray());
   ui->spViews->restoreState(s.value("Main/spViews").toByteArray());
   ui->spLeftRight->restoreState(s.value("Main/spLeftRight").toByteArray());
+  QSignalBlocker block(ui->cbAnimation);
+  ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
 
   QTimer::singleShot(10, this, [this] {
-    const auto recent = QSettings().value("Main/RecentFiles").toStringList();
+    QSettings s;
+    const auto recent = s.value("Main/RecentFiles").toStringList();
     if (!recent.isEmpty())
       open_file(recent.front());
   });
@@ -154,7 +157,6 @@ bool Cubes3D::eval_text(const QString &t)
     const auto out = m_feWrap.eval(t, *ui->view3d);
     ui->teFeOut->setTextColor(Qt::black);
     ui->teFeOut->append(out);
-    updateAnimationList();
   }
   catch (const std::exception &e)
   {
@@ -162,6 +164,8 @@ bool Cubes3D::eval_text(const QString &t)
     ui->teFeOut->append(QString("ERROR: ") + e.what());
     ok = false;
   }
+
+  updateAnimationList();
 
   try
   {
@@ -221,6 +225,7 @@ void Cubes3D::on_cbAnimation_currentIndexChanged(const QString &name)
 {
   ui->view3d->showAnimation(name);
   updateAnimation();
+  QSettings().setValue("Main/RecentAnimation", name);
 }
 
 void Cubes3D::updateAnimation()
