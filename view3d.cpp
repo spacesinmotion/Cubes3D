@@ -10,6 +10,7 @@
 #include <QOpenGLFramebufferObject>
 #include <QPainter>
 #include <QShortcut>
+#include <ranges>
 
 View3D::View3D(QWidget *parent)
   : QOpenGLWidget(parent)
@@ -22,9 +23,12 @@ View3D::View3D(QWidget *parent)
 
 View3D::~View3D() = default;
 
-void View3D::showScene(std::unique_ptr<RenderContainer> scene)
+void View3D::showAnimation(const QString &name)
 {
-  m_scene = std::move(scene);
+  m_scene = nullptr;
+  for (const auto &a : m_animations)
+    if (a.name == name)
+      m_scene = a.scene.get();
 }
 
 void View3D::initializeGL()
@@ -124,15 +128,10 @@ SharedDisplayObject View3D::cube()
 
 void View3D::clear_scene()
 {
-  m_scene = std::make_unique<RenderContainer>();
+  m_scene = nullptr;
   m_animations.clear();
   m_ticker.clear();
   m_timer.restart();
-}
-
-void View3D::show_in_scene(std::unique_ptr<RenderObject> ro)
-{
-  m_scene->add(std::move(ro));
 }
 
 void View3D::add_animation(const QString &name, std::unique_ptr<RenderObject> o)
@@ -171,6 +170,7 @@ void View3D::mouseMoveEvent(QMouseEvent *me)
   QOpenGLWidget::mouseMoveEvent(me);
 }
 
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
 void View3D::wheelEvent(QWheelEvent *we)
 {
   m_cam.zoomEvent(slm::vec2(0.0f, -float(we->delta())));
@@ -313,4 +313,12 @@ QImage View3D::toImage(double t, int w, int h)
   auto i = fbo.toImage(true);
   m_cam.setViewPort(slm::vec2(width(), height()));
   return i;
+}
+
+QStringList View3D::animations() const
+{
+  QStringList names;
+  for (const auto &a : m_animations)
+    names.append(a.name);
+  return names;
 }

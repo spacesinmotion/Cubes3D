@@ -14,7 +14,6 @@ class SceneHandler
 public:
   virtual ~SceneHandler() = default;
 
-  virtual void show_in_scene(std::unique_ptr<RenderObject>) = 0;
   virtual void add_animation(const QString &, std::unique_ptr<RenderObject>) = 0;
   virtual void on_tick(const Tick &) = 0;
 };

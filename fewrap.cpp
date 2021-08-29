@@ -398,16 +398,6 @@ void FeWrap::add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg)
     c.add(_uobj(ctx, fe_nextarg(ctx, arg)));
 }
 
-fe_Object *FeWrap::_show(fe_Context *ctx, fe_Object *arg)
-{
-  auto *sh = _scene(ctx);
-
-  while (!fe_isnil(ctx, arg))
-    sh->show_in_scene(_uobj(ctx, fe_nextarg(ctx, &arg)));
-
-  return fe_bool(ctx, false);
-}
-
 fe_Object *FeWrap::_animation(fe_Context *ctx, fe_Object *arg)
 {
   auto *sh = _scene(ctx);
@@ -571,8 +561,6 @@ void FeWrap::init_fn(fe_Context *ctx)
 
   fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, _cube));
   fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, _group));
-
-  fe_set(ctx, fe_symbol(ctx, "show"), fe_cfunc(ctx, _show));
 
   fe_set(ctx, fe_symbol(ctx, "lfo"), fe_cfunc(ctx, _lfo));
 

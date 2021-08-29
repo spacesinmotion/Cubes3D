@@ -22,18 +22,7 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->spViews->restoreState(s.value("Main/spViews").toByteArray());
   ui->spLeftRight->restoreState(s.value("Main/spLeftRight").toByteArray());
 
-  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] {
-    m_animation.clear();
-    for (int i = 0; i < 20; ++i)
-    {
-      m_animation << QPixmap::fromImage(ui->view3d->toImage(double(i) / 20.0, w, h));
-      QPainter p(&m_animation.back());
-      p.drawLine(0, 0, int(i / 20.0 * w), 0);
-      p.drawPoint(w - 1, h - 1);
-      p.drawPoint(0, h - 1);
-      p.drawPoint(w - 1, 0);
-    }
-  });
+  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
 
   QTimer::singleShot(10, this, [this] {
     const auto recent = QSettings().value("Main/RecentFiles").toStringList();
@@ -165,6 +154,7 @@ bool Cubes3D::eval_text(const QString &t)
     const auto out = m_feWrap.eval(t, *ui->view3d);
     ui->teFeOut->setTextColor(Qt::black);
     ui->teFeOut->append(out);
+    updateAnimationList();
   }
   catch (const std::exception &e)
   {
@@ -225,4 +215,34 @@ void Cubes3D::on_menuRecent_aboutToShow()
 void Cubes3D::on_actionclearRecent_triggered()
 {
   QSettings().setValue("Main/RecentFiles", QStringList{});
+}
+
+void Cubes3D::on_cbAnimation_currentIndexChanged(const QString &name)
+{
+  ui->view3d->showAnimation(name);
+  updateAnimation();
+}
+
+void Cubes3D::updateAnimation()
+{
+  m_animation.clear();
+  for (int i = 0; i < 20; ++i)
+  {
+    m_animation << QPixmap::fromImage(ui->view3d->toImage(double(i) / 20.0, w, h));
+    QPainter p(&m_animation.back());
+    p.drawLine(0, 0, int(i / 20.0 * w), 0);
+    p.drawPoint(w - 1, h - 1);
+    p.drawPoint(0, h - 1);
+    p.drawPoint(w - 1, 0);
+  }
+}
+
+void Cubes3D::updateAnimationList()
+{
+  const auto last = ui->cbAnimation->currentText();
+  QSignalBlocker block(ui->cbAnimation);
+  ui->cbAnimation->clear();
+  ui->cbAnimation->addItems(ui->view3d->animations());
+  ui->cbAnimation->setCurrentIndex(std::max(0, ui->cbAnimation->findText(last)));
+  on_cbAnimation_currentIndexChanged(ui->cbAnimation->currentText());
 }

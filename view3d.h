@@ -26,7 +26,7 @@ public:
   explicit View3D(QWidget *parent = nullptr);
   ~View3D();
 
-  void showScene(std::unique_ptr<RenderContainer> scene);
+  void showAnimation(const QString &name);
 
   slm::vec3 mouseInSpace(const QPoint &mp);
 
@@ -34,11 +34,12 @@ public:
   SharedDisplayObject cube() final;
 
   void clear_scene();
-  void show_in_scene(std::unique_ptr<RenderObject>) final;
   void add_animation(const QString &name, std::unique_ptr<RenderObject>) final;
   void on_tick(const Tick &) final;
 
   QImage toImage(double t, int w, int h);
+
+  QStringList animations() const;
 
 protected:
   void initializeGL() final;
@@ -77,7 +78,7 @@ private: // data
   QOpenGLShaderProgram m_program;
 
   QHash<QString, WeakDisplayObject> m_displayObjects;
-  std::unique_ptr<RenderContainer> m_scene;
+  RenderObject *m_scene{nullptr};
 
   struct Animation
   {

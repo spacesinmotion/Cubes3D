@@ -28,11 +28,16 @@ private slots:
   void on_menuRecent_aboutToShow();
   void on_actionclearRecent_triggered();
 
+  void on_cbAnimation_currentIndexChanged(const QString &name);
+
 private:
   void closeEvent(QCloseEvent *e);
   void timerEvent(QTimerEvent *t);
 
   void highlightBraces();
+
+  void updateAnimation();
+  void updateAnimationList();
 
 private:
   Ui::Cubes3D *ui;

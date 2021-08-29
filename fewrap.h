@@ -37,8 +37,6 @@ private:
 
   static void add_all(RenderContainer &c, fe_Context *ctx, fe_Object **arg);
 
-  static fe_Object *_show(fe_Context *ctx, fe_Object *arg);
-
   static fe_Object *_group(fe_Context *ctx, fe_Object *arg);
   static fe_Object *_translate(fe_Context *ctx, fe_Object *arg);
   static fe_Object *_rotate(fe_Context *ctx, fe_Object *arg);
