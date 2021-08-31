@@ -48,7 +48,7 @@ private:
   QVector<QPixmap> m_animation;
   int m_animationStep{0};
 
-  static const int w = 32, h = 64, s = 4;
+  static const int w = 24, h = 48, s = 3;
 };
 
 #endif // CUBES3D_H
