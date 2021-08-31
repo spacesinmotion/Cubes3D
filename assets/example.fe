@@ -1,3 +1,5 @@
+(= lp (vec3 0.4 -2 5))
+
 (= body (fn (a)
   (translate a
     (cube (vec3 0.4 0.25 0.45) (color 174 196 231)))))
@@ -35,8 +37,8 @@
         (translate (vec3 -0.185 0 0)
           (leg freq -1)))))))
 
-(animation "guy_3"
+(animation "guy_3" lp
   (guy 0.33))
 
-(animation "guy_2"
+(animation "guy_2" lp
   (guy 2))

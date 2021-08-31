@@ -34,7 +34,7 @@ public:
   SharedDisplayObject cube() final;
 
   void clear_scene();
-  void add_animation(const QString &name, std::unique_ptr<RenderObject>) final;
+  void add_animation(const QString &name, const slm::vec3 &lp, std::unique_ptr<RenderObject>) final;
   void on_tick(const Tick &) final;
 
   QImage toImage(double t, int w, int h);
@@ -78,18 +78,20 @@ private: // data
   QOpenGLShaderProgram m_program;
 
   QHash<QString, WeakDisplayObject> m_displayObjects;
-  RenderObject *m_scene{nullptr};
 
   struct Animation
   {
     QString name;
     std::unique_ptr<RenderObject> scene;
+    slm::vec3 light_pos{0.0, -2.0, 8.0};
 
-    Animation(const QString &n, std::unique_ptr<RenderObject> s)
+    Animation(const QString &n, const slm::vec3 &lp, std::unique_ptr<RenderObject> s)
       : name{n}
+      , light_pos{lp}
       , scene{std::move(s)}
     {}
   };
+  const Animation *m_animation{nullptr};
   std::vector<Animation> m_animations;
 
   QElapsedTimer m_timer;

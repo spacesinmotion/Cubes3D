@@ -25,10 +25,10 @@ View3D::~View3D() = default;
 
 void View3D::showAnimation(const QString &name)
 {
-  m_scene = nullptr;
+  m_animation = nullptr;
   for (const auto &a : m_animations)
     if (a.name == name)
-      m_scene = a.scene.get();
+      m_animation = &a;
 }
 
 void View3D::initializeGL()
@@ -63,7 +63,11 @@ void View3D::paintGL()
   m_program.setUniformValue("projection", QMatrix4x4(slm::transpose(m_cam.projection()).begin()));
   m_program.setUniformValue("model_view", QMatrix4x4(slm::transpose(m_cam.modelView()).begin()));
   m_program.setUniformValue("normal_matrix", QMatrix4x4(slm::inverse(m_cam.modelView()).begin()));
-
+  if (m_animation)
+  {
+    const auto &l = m_animation->light_pos;
+    m_program.setUniformValue("light_pos", l.x, l.y, l.z, 1.0);
+  }
   m_program.setUniformValue("object_transformation", QMatrix4x4());
   m_program.setUniformValue("object_normal", QMatrix4x4());
 
@@ -128,15 +132,15 @@ SharedDisplayObject View3D::cube()
 
 void View3D::clear_scene()
 {
-  m_scene = nullptr;
+  m_animation = nullptr;
   m_animations.clear();
   m_ticker.clear();
   m_timer.restart();
 }
 
-void View3D::add_animation(const QString &name, std::unique_ptr<RenderObject> o)
+void View3D::add_animation(const QString &name, const slm::vec3 &lp, std::unique_ptr<RenderObject> o)
 {
-  m_animations.emplace_back(Animation{name, std::move(o)});
+  m_animations.emplace_back(name, lp, std::move(o));
 }
 
 void View3D::on_tick(const Tick &tick)
@@ -197,8 +201,8 @@ void View3D::timerEvent(QTimerEvent *te)
 
 void View3D::drawObjects()
 {
-  if (m_scene)
-    m_scene->draw(m_program, QMatrix4x4());
+  if (m_animation)
+    m_animation->scene->draw(m_program, QMatrix4x4());
 }
 
 void View3D::drawLine(const QColor &c, const std::vector<slm::vec3> &l)

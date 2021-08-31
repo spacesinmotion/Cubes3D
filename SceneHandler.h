@@ -6,6 +6,10 @@
 
 class RenderObject;
 class QString;
+namespace slm
+{
+class vec3;
+}
 
 using Tick = std::function<void(float)>;
 
@@ -14,7 +18,7 @@ class SceneHandler
 public:
   virtual ~SceneHandler() = default;
 
-  virtual void add_animation(const QString &, std::unique_ptr<RenderObject>) = 0;
+  virtual void add_animation(const QString &, const slm::vec3 &, std::unique_ptr<RenderObject>) = 0;
   virtual void on_tick(const Tick &) = 0;
 };
 

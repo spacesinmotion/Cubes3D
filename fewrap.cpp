@@ -402,7 +402,8 @@ fe_Object *FeWrap::_animation(fe_Context *ctx, fe_Object *arg)
 {
   auto *sh = _scene(ctx);
   const auto name = from_string(ctx, fe_nextarg(ctx, &arg));
-  sh->add_animation(name, _uobj(ctx, fe_nextarg(ctx, &arg)));
+  const auto lp = get<vec3>(ctx, fe_nextarg(ctx, &arg));
+  sh->add_animation(name, lp, _uobj(ctx, fe_nextarg(ctx, &arg)));
 
   return fe_bool(ctx, false);
 }
