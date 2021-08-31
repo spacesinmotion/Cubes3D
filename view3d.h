@@ -38,6 +38,7 @@ public:
   void on_tick(const Tick &) final;
 
   QImage toImage(double t, int w, int h);
+  QVector<QPixmap> allFrames(int w, int h);
 
   QStringList animations() const;
 

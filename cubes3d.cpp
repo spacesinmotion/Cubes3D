@@ -230,18 +230,19 @@ void Cubes3D::on_cbAnimation_currentIndexChanged(const QString &name)
 
 void Cubes3D::updateAnimation()
 {
-  m_animation.clear();
-  for (int i = 0; i < 20; ++i)
+  m_animation = ui->view3d->allFrames(w, h);
+  int i = 0;
+  for (auto &f : m_animation)
   {
-    m_animation << QPixmap::fromImage(ui->view3d->toImage(double(i) / 20.0, w, h));
-    QPainter p(&m_animation.back());
-    p.drawLine(0, 0, int(i / 20.0 * w), 0);
+    QPainter p(&f);
+    p.drawLine(0, 0, int(i / double(m_animation.size()) * w), 0);
     p.drawPoint(w - 1, h - 1);
     p.drawPoint(0, h - 1);
     p.drawPoint(w - 1, 0);
     p.setPen(Qt::lightGray);
     p.drawPoint(0, h / 2);
     p.drawPoint(w - 1, h / 2);
+    ++i;
   }
 }
 

@@ -317,6 +317,14 @@ QImage View3D::toImage(double t, int w, int h)
   return std::move(i);
 }
 
+QVector<QPixmap> View3D::allFrames(int w, int h)
+{
+  QVector<QPixmap> frames;
+  for (int i = 0; i < 20; ++i)
+    frames << QPixmap::fromImage(toImage(double(i) / 20.0, w, h));
+  return frames;
+}
+
 QStringList View3D::animations() const
 {
   QStringList names;
