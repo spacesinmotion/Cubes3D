@@ -37,8 +37,13 @@
         (translate (vec3 -0.185 0 0)
           (leg freq -1)))))))
 
-(animation "guy_3" lp
-  (guy 0.33))
-
-(animation "guy_2" lp
+(animation "guy_front" lp
   (guy 2))
+
+(animation "guy_left" lp
+  (rotateZ 90
+    (guy 2)))
+
+(animation "guy_right" lp
+  (rotateZ -90
+    (guy 2)))

@@ -44,8 +44,6 @@ void View3D::initializeGL()
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glEnable(GL_CULL_FACE);
 
-  m_cam.setViewCenter(slm::vec3(0, 0, 2));
-
   connect(new QShortcut(Qt::Key_2, this), &QShortcut::activated, this, [this] { m_cam.set_front(); });
   connect(new QShortcut(Qt::Key_6, this), &QShortcut::activated, this, [this] { m_cam.set_right(); });
   connect(new QShortcut(Qt::Key_4, this), &QShortcut::activated, this, [this] { m_cam.set_left(); });
@@ -300,7 +298,7 @@ QImage View3D::toImage(double t, int w, int h)
   QOpenGLFramebufferObjectFormat f;
   f.setAttachment(QOpenGLFramebufferObject::CombinedDepthStencil);
   QOpenGLFramebufferObject fbo(w, h, f);
-  m_cam.setViewPort(slm::vec2(w, h));
+  const auto revert = m_cam.to_animation_view(w, h);
   fbo.bind();
   context.functions()->glViewport(0, 0, w, h);
 
@@ -315,8 +313,8 @@ QImage View3D::toImage(double t, int w, int h)
   m_drawHelper = true;
 
   auto i = fbo.toImage(true);
-  m_cam.setViewPort(slm::vec2(width(), height()));
-  return i;
+  revert();
+  return std::move(i);
 }
 
 QStringList View3D::animations() const

@@ -7,8 +7,7 @@ Camera::Camera()
   , m_xRot(45.0f)
 {}
 
-void Camera::tick()
-{}
+void Camera::tick() {}
 
 const slm::vec2 &Camera::viewPort() const
 {
@@ -81,4 +80,23 @@ void Camera::set_left()
   m_zoom = 4.0f;
   m_xRot = 45.0;
   m_zRot = -90.0;
+}
+
+std::function<void()> Camera::to_animation_view(int w, int h)
+{
+  const auto z = m_zoom;
+  const auto rx = m_xRot;
+  const auto rz = m_zRot;
+  const auto c = m_center;
+  const auto vp = m_viewPort;
+  set_front();
+  setViewPort(slm::vec2(w, h));
+  setViewCenter(slm::vec3{0, 0, 2});
+  return [=] {
+    m_viewPort = vp;
+    m_zoom = z;
+    m_xRot = rx;
+    m_zRot = rz;
+    m_center = c;
+  };
 }

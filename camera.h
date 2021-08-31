@@ -3,6 +3,8 @@
 
 #include "slm/mat4.h"
 
+#include <functional>
+
 class Camera
 {
 public:
@@ -18,20 +20,11 @@ public: // getter
   slm::mat4 modelView() const;
   slm::mat4 rotation() const;
 
-  float zoom() const
-  {
-    return m_zoom;
-  }
+  float zoom() const { return m_zoom; }
 
 public: // setter
-  void setViewPort(const slm::vec2 &s)
-  {
-    m_viewPort = s;
-  }
-  void setViewCenter(const slm::vec3 &c)
-  {
-    m_center = c;
-  }
+  void setViewPort(const slm::vec2 &s) { m_viewPort = s; }
+  void setViewCenter(const slm::vec3 &c) { m_center = c; }
 
   void translationEvent(const slm::vec2 &move2D);
   void rotationEvent(const slm::vec2 &move2D);
@@ -43,6 +36,8 @@ public: // setter
   void set_left();
   void jump();
 
+  std::function<void()> to_animation_view(int w, int h);
+
 private:
   slm::vec2 m_viewPort;
 
@@ -51,7 +46,7 @@ private:
   float m_xRot{45.0f};
   float m_zRot{0.0f};
 
-  slm::vec3 m_center{0.0};
+  slm::vec3 m_center{0, 0, 2};
 };
 
 #endif // CAMERA_H
