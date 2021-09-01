@@ -25,6 +25,8 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
+  connect(new QShortcut(Qt::ControlModifier + Qt::Key_D, ui->teFeIn), &QShortcut::activated, this,
+          [this] { duplicateLine(); });
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -260,4 +262,24 @@ void Cubes3D::updateAnimationList()
   ui->cbAnimation->addItems(ui->view3d->animations());
   ui->cbAnimation->setCurrentIndex(std::max(0, ui->cbAnimation->findText(last)));
   on_cbAnimation_currentIndexChanged(ui->cbAnimation->currentText());
+}
+
+void Cubes3D::duplicateLine()
+{
+  auto c = ui->teFeIn->textCursor();
+  if (c.hasSelection())
+  {
+    const auto d = c.selectedText();
+    c.clearSelection();
+    c.insertText(d);
+    c.movePosition(c.Left, c.KeepAnchor, d.size());
+  }
+  else
+  {
+    c.select(c.LineUnderCursor);
+    const auto line = c.selectedText();
+    c.movePosition(c.EndOfLine);
+    c.insertText("\n" + line);
+  }
+  ui->teFeIn->setTextCursor(c);
 }

@@ -39,6 +39,8 @@ private:
   void updateAnimation();
   void updateAnimationList();
 
+  void duplicateLine();
+
 private:
   Ui::Cubes3D *ui;
 
