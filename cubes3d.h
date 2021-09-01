@@ -34,7 +34,7 @@ private:
   void closeEvent(QCloseEvent *e);
   void timerEvent(QTimerEvent *t);
 
-  void highlightBraces();
+  void additionalHighlights();
 
   void updateAnimation();
   void updateAnimationList();

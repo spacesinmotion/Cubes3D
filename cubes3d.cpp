@@ -35,7 +35,7 @@ Cubes3D::Cubes3D(QWidget *parent)
 
   new FeSyntaxHighlighter(ui->teFeIn->document());
 
-  connect(ui->teFeIn, &QTextEdit::cursorPositionChanged, this, &Cubes3D::highlightBraces);
+  connect(ui->teFeIn, &QTextEdit::cursorPositionChanged, this, &Cubes3D::additionalHighlights);
 
   startTimer(1000 / 20);
 }
@@ -66,11 +66,17 @@ void Cubes3D::timerEvent(QTimerEvent *t)
   ++m_animationStep;
 }
 
-void Cubes3D::highlightBraces()
+void Cubes3D::additionalHighlights()
 {
   QList<QTextEdit::ExtraSelection> extraSelections;
 
   QTextEdit::ExtraSelection selection;
+  selection.format.setBackground(QColor(153, 211, 218, 50));
+  selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+  selection.cursor = ui->teFeIn->textCursor();
+  selection.cursor.clearSelection();
+  extraSelections.append(selection);
+
   selection.format.setBackground(QColor(103, 161, 88, 100));
   selection.cursor = ui->teFeIn->textCursor();
   int closed = 1;
