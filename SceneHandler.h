@@ -18,7 +18,7 @@ class SceneHandler
 public:
   virtual ~SceneHandler() = default;
 
-  virtual void add_animation(const QString &, const slm::vec3 &, std::unique_ptr<RenderObject>) = 0;
+  virtual void add_animation(const QString &, float l, const slm::vec3 &, std::unique_ptr<RenderObject>) = 0;
   virtual void on_tick(const Tick &) = 0;
 };
 

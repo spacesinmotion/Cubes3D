@@ -34,7 +34,7 @@ public:
   SharedDisplayObject cube() final;
 
   void clear_scene();
-  void add_animation(const QString &name, const slm::vec3 &lp, std::unique_ptr<RenderObject>) final;
+  void add_animation(const QString &name, float l, const slm::vec3 &lp, std::unique_ptr<RenderObject>) final;
   void on_tick(const Tick &) final;
 
   QImage toImage(double t, int w, int h);
@@ -83,11 +83,13 @@ private: // data
   struct Animation
   {
     QString name;
-    std::unique_ptr<RenderObject> scene;
+    float length{0.5};
     slm::vec3 light_pos{0.0, -2.0, 8.0};
+    std::unique_ptr<RenderObject> scene;
 
-    Animation(const QString &n, const slm::vec3 &lp, std::unique_ptr<RenderObject> s)
+    Animation(const QString &n, float l, const slm::vec3 &lp, std::unique_ptr<RenderObject> s)
       : name{n}
+      , length{l}
       , light_pos{lp}
       , scene{std::move(s)}
     {}

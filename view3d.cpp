@@ -136,9 +136,9 @@ void View3D::clear_scene()
   m_timer.restart();
 }
 
-void View3D::add_animation(const QString &name, const slm::vec3 &lp, std::unique_ptr<RenderObject> o)
+void View3D::add_animation(const QString &name, float l, const slm::vec3 &lp, std::unique_ptr<RenderObject> o)
 {
-  m_animations.emplace_back(name, lp, std::move(o));
+  m_animations.emplace_back(name, l, lp, std::move(o));
 }
 
 void View3D::on_tick(const Tick &tick)
@@ -319,9 +319,12 @@ QImage View3D::toImage(double t, int w, int h)
 
 QVector<QPixmap> View3D::allFrames(int w, int h)
 {
+  if (!m_animation)
+    return {};
+  const auto count = int(20.0 * m_animation->length);
   QVector<QPixmap> frames;
-  for (int i = 0; i < 20; ++i)
-    frames << QPixmap::fromImage(toImage(double(i) / 20.0, w, h));
+  for (int i = 0; i < count; ++i)
+    frames << QPixmap::fromImage(toImage(double(i) / double(count), w, h));
   return frames;
 }
 
