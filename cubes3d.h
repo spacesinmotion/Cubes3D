@@ -31,15 +31,19 @@ private slots:
   void on_cbAnimation_currentIndexChanged(const QString &name);
 
 private:
-  void closeEvent(QCloseEvent *e);
-  void timerEvent(QTimerEvent *t);
+  void closeEvent(QCloseEvent *e) final;
+  void timerEvent(QTimerEvent *t) final;
+  bool eventFilter(QObject *o, QEvent *e) final;
 
   void additionalHighlights();
 
   void updateAnimation();
   void updateAnimationList();
 
-  void duplicateLine();
+  void duplicateSelection();
+  void copySelection(bool remove = false);
+  void cutSelection();
+  void insertSelection();
 
 private:
   Ui::Cubes3D *ui;

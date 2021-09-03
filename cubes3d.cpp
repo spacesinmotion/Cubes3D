@@ -3,6 +3,7 @@
 #include "fesyntaxhighlighter.h"
 #include "ui_cubes3d.h"
 
+#include <QClipboard>
 #include <QFileDialog>
 #include <QPainter>
 #include <QSettings>
@@ -25,8 +26,10 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
-  connect(new QShortcut(Qt::ControlModifier + Qt::Key_D, ui->teFeIn), &QShortcut::activated, this,
-          [this] { duplicateLine(); });
+  ui->teFeIn->installEventFilter(this);
+
+  for (auto *sc : ui->teFeIn->findChildren<QShortcut *>())
+    qDebug() << sc->key();
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -66,6 +69,28 @@ void Cubes3D::timerEvent(QTimerEvent *t)
 
   ui->laPixelPreview->setPixmap(m_animation[m_animationStep % m_animation.size()].scaled(w * s, h * s));
   ++m_animationStep;
+}
+
+bool Cubes3D::eventFilter(QObject *o, QEvent *e)
+{
+  if (o == ui->teFeIn && (e->type() == QEvent::KeyRelease || e->type() == QEvent::KeyPress))
+  {
+    const auto match = [e](auto m, auto k, auto cb) {
+      const auto *ke = static_cast<QKeyEvent *>(e);
+      if (ke->modifiers() == m && ke->key() == k)
+      {
+        if (e->type() == QEvent::KeyRelease)
+          cb();
+        return true;
+      }
+      return false;
+    };
+    return match(Qt::ControlModifier, Qt::Key_X, [this] { cutSelection(); }) ||
+           match(Qt::ControlModifier, Qt::Key_C, [this] { copySelection(); }) ||
+           match(Qt::ControlModifier, Qt::Key_V, [this] { insertSelection(); }) ||
+           match(Qt::ControlModifier, Qt::Key_D, [this] { duplicateSelection(); });
+  }
+  return false;
 }
 
 void Cubes3D::additionalHighlights()
@@ -264,7 +289,7 @@ void Cubes3D::updateAnimationList()
   on_cbAnimation_currentIndexChanged(ui->cbAnimation->currentText());
 }
 
-void Cubes3D::duplicateLine()
+void Cubes3D::duplicateSelection()
 {
   auto c = ui->teFeIn->textCursor();
   if (c.hasSelection())
@@ -282,4 +307,38 @@ void Cubes3D::duplicateLine()
     c.insertText("\n" + line);
   }
   ui->teFeIn->setTextCursor(c);
+}
+
+void Cubes3D::copySelection(bool remove)
+{
+  auto c = ui->teFeIn->textCursor();
+  auto d = c.selectedText();
+  if (d.isEmpty())
+  {
+    c.select(c.LineUnderCursor);
+    c.movePosition(c.Right, c.KeepAnchor);
+    d = "__::__" + c.selectedText();
+  }
+  if (remove)
+    c.removeSelectedText();
+  qApp->clipboard()->setText(d);
+  if (remove)
+    ui->teFeIn->setTextCursor(c);
+}
+
+void Cubes3D::cutSelection()
+{
+  copySelection(true);
+}
+
+void Cubes3D::insertSelection()
+{
+  auto c = ui->teFeIn->textCursor();
+  auto t = qApp->clipboard()->text();
+  if (t.startsWith("__::__"))
+  {
+    c.movePosition(c.StartOfLine);
+    t = t.mid(6);
+  }
+  c.insertText(t);
 }
