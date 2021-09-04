@@ -59,17 +59,25 @@ QTextCursor to_outer_end(QTextCursor c, bool select = false)
 FeEdit::FeEdit(QWidget *parent)
   : QTextEdit(parent)
 {
-  const QStringList forms = {"(vec3 0 0 0)",
-                             "(color 0 0 0)",
-                             "(fn (%1) %2)",
-                             "(= %1 %2)",
-                             "(rotateX 0 %1)",
-                             "(rotateY 0 %1)",
-                             "(rotateZ 0 %1)",
-                             "(rotate 0 (vec3 1 0 0) %1)",
-                             "(translate (vec3 0 0 0) %1)",
-                             "(lfo %1 %2 &3)",
-                             "(cube (vec3 1 1 1) (color 0 0 0))"};
+  QStringList forms = {"(vec3 0 0 0)",
+                       "(color 0 0 0)",
+                       "(fn (&1) &2)",
+                       "(mac (&1) &2)",
+                       "(if &1 &2)",
+                       "(while &1 &2)",
+                       "(= &1 &2)",
+                       "(let &1 &2)",
+                       "(rotateX 0 &1)",
+                       "(rotateY 0 &1)",
+                       "(rotateZ 0 &1)",
+                       "(rotate 0 (vec3 1 0 0) &1)",
+                       "(translate (vec3 0 0 0) &1)",
+                       "(lfo &1 &2 &3)",
+                       "(cube (vec3 1 1 1) (color 0 0 0))"};
+  for (const auto *x : {"quote", "and", "or",    "do",    "cons", "car", "cdr", "setcar", "setcdr",   "list",
+                        "not",   "is",  "atom",  "print", "sin",  "cos", "tan", "asin",   "acos",     "atan",
+                        "deg",   "rad", "floor", "ceil",  "sqrt", "abs", "max", "min",    "animation"})
+    forms << QString("(%1 &1)").arg(x);
   m_complete = new QCompleter(forms, this);
   m_complete->setCaseSensitivity(Qt::CaseInsensitive);
   m_complete->setWidget(this);
