@@ -40,18 +40,6 @@ private:
   void updateAnimation();
   void updateAnimationList();
 
-  void duplicateSelection();
-  void copySelection(bool remove = false);
-  void cutSelection();
-  void insertSelection();
-
-  void cursorToOuterList(bool select = false);
-  void cursorToInnerList(bool select = false);
-  void cursorToNextInList(bool select = false);
-  void cursorToPrevInList(bool select = false);
-  void cursorToListStart(bool select = false);
-  void cursorToListEnd(bool select = false);
-
 private:
   Ui::Cubes3D *ui;
 

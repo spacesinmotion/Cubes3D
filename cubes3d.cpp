@@ -1,6 +1,5 @@
 #include "cubes3d.h"
 
-#include "fesyntaxhighlighter.h"
 #include "ui_cubes3d.h"
 
 #include <QClipboard>
@@ -10,49 +9,6 @@
 #include <QSettings>
 #include <QShortcut>
 #include <QTimer>
-
-QTextCursor to_outer(QTextCursor c, bool select = false)
-{
-  auto *d = c.document();
-  int i = 1;
-  while (!c.atStart())
-  {
-    c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
-    auto x = d->characterAt(c.position());
-    if (x == '(')
-    {
-      --i;
-      if (i == 0)
-        break;
-    }
-    else if (x == ')')
-      ++i;
-  }
-  return c;
-}
-
-QTextCursor to_outer_end(QTextCursor c, bool select = false)
-{
-  auto *d = c.document();
-  int i = 1;
-  while (!c.atEnd())
-  {
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-    auto x = d->characterAt(c.position());
-    if (x == ')')
-    {
-      --i;
-      if (i == 0)
-      {
-        c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-        break;
-      }
-    }
-    else if (x == '(')
-      ++i;
-  }
-  return c;
-}
 
 Cubes3D::Cubes3D(QWidget *parent)
   : QMainWindow(parent)
@@ -70,7 +26,6 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
-  ui->teFeIn->installEventFilter(this);
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -78,8 +33,6 @@ Cubes3D::Cubes3D(QWidget *parent)
     if (!recent.isEmpty())
       open_file(recent.front());
   });
-
-  new FeSyntaxHighlighter(ui->teFeIn->document());
 
   connect(ui->teFeIn, &QTextEdit::cursorPositionChanged, this, &Cubes3D::additionalHighlights);
 
@@ -115,34 +68,7 @@ void Cubes3D::timerEvent(QTimerEvent *t)
 bool Cubes3D::eventFilter(QObject *o, QEvent *e)
 {
   if (o == ui->teFeIn && (e->type() == QEvent::KeyRelease || e->type() == QEvent::KeyPress))
-  {
-    const auto *ke = static_cast<QKeyEvent *>(e);
-    const auto match = [ke](auto m, auto k, auto cb) {
-      if (ke->modifiers() == m && ke->key() == k)
-      {
-        if (ke->type() == QEvent::KeyRelease)
-          cb();
-        return true;
-      }
-      return false;
-    };
-    return match(Qt::ControlModifier, Qt::Key_X, [this] { cutSelection(); }) ||
-           match(Qt::ControlModifier, Qt::Key_C, [this] { copySelection(); }) ||
-           match(Qt::ControlModifier, Qt::Key_V, [this] { insertSelection(); }) ||
-           match(Qt::AltModifier, Qt::Key_Up, [this] { cursorToOuterList(); }) ||
-           match(Qt::AltModifier, Qt::Key_Down, [this] { cursorToInnerList(); }) ||
-           match(Qt::AltModifier, Qt::Key_Right, [this] { cursorToNextInList(); }) ||
-           match(Qt::AltModifier, Qt::Key_Left, [this] { cursorToPrevInList(); }) ||
-           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Up, [this] { cursorToOuterList(true); }) ||
-           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Down, [this] { cursorToInnerList(true); }) ||
-           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Right, [this] { cursorToNextInList(true); }) ||
-           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Left, [this] { cursorToPrevInList(true); }) ||
-           match(Qt::AltModifier, Qt::Key_Home, [this] { cursorToListStart(); }) ||
-           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Home, [this] { cursorToListStart(true); }) ||
-           match(Qt::AltModifier, Qt::Key_End, [this] { cursorToListEnd(); }) ||
-           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_End, [this] { cursorToListEnd(true); }) ||
-           match(Qt::ControlModifier, Qt::Key_D, [this] { duplicateSelection(); });
-  }
+  {}
   return false;
 }
 
@@ -340,137 +266,4 @@ void Cubes3D::updateAnimationList()
   ui->cbAnimation->addItems(ui->view3d->animations());
   ui->cbAnimation->setCurrentIndex(std::max(0, ui->cbAnimation->findText(last)));
   on_cbAnimation_currentIndexChanged(ui->cbAnimation->currentText());
-}
-
-void Cubes3D::duplicateSelection()
-{
-  auto c = ui->teFeIn->textCursor();
-  if (c.hasSelection())
-  {
-    const auto d = c.selectedText();
-    c.clearSelection();
-    c.insertText(d);
-    c.movePosition(c.Left, c.KeepAnchor, d.size());
-  }
-  else
-  {
-    c.select(c.LineUnderCursor);
-    const auto line = c.selectedText();
-    c.movePosition(c.EndOfLine);
-    c.insertText("\n" + line);
-  }
-  ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::copySelection(bool remove)
-{
-  auto c = ui->teFeIn->textCursor();
-  auto d = c.selectedText();
-  if (d.isEmpty())
-  {
-    c.select(c.LineUnderCursor);
-    c.movePosition(c.Right, c.KeepAnchor);
-    d = "__::__" + c.selectedText();
-  }
-  if (remove)
-    c.removeSelectedText();
-  qApp->clipboard()->setText(d);
-  if (remove)
-    ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::cutSelection()
-{
-  copySelection(true);
-}
-
-void Cubes3D::insertSelection()
-{
-  auto c = ui->teFeIn->textCursor();
-  auto t = qApp->clipboard()->text();
-  if (t.startsWith("__::__"))
-  {
-    c.movePosition(c.StartOfLine);
-    t = t.mid(6);
-  }
-  c.insertText(t);
-}
-
-void Cubes3D::cursorToOuterList(bool select)
-{
-  auto c = ui->teFeIn->textCursor();
-  if (select)
-  {
-    c = to_outer_end(c);
-    c.movePosition(c.Left, c.KeepAnchor);
-  }
-  c = to_outer(c, select);
-  ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::cursorToInnerList(bool select)
-{
-  auto c = ui->teFeIn->textCursor();
-  auto *d = c.document();
-  while (!c.atEnd() && d->characterAt(c.position()).isSpace())
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-  if (d->characterAt(c.position()) == '(')
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-  ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::cursorToNextInList(bool select)
-{
-  auto c = ui->teFeIn->textCursor();
-  auto *d = c.document();
-  if (d->characterAt(c.position()) == '(')
-  {
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-    c = to_outer_end(c, select);
-  }
-  while (!c.atEnd() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != ')')
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-  while (!c.atEnd() && d->characterAt(c.position()).isSpace())
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-  ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::cursorToPrevInList(bool select)
-{
-  auto c = ui->teFeIn->textCursor();
-  auto *d = c.document();
-
-  c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
-  if (d->characterAt(c.position()) == '(')
-    return;
-
-  while (!c.atStart() && d->characterAt(c.position()).isSpace())
-    c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
-  if (d->characterAt(c.position()) == ')')
-  {
-    c = to_outer(c, select);
-  }
-  else
-  {
-    while (!c.atStart() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != '(')
-      c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
-    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-  }
-  ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::cursorToListStart(bool select)
-{
-  auto c = ui->teFeIn->textCursor();
-  c = to_outer(c, select);
-  c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
-  ui->teFeIn->setTextCursor(c);
-}
-
-void Cubes3D::cursorToListEnd(bool select)
-{
-  auto c = ui->teFeIn->textCursor();
-  c = to_outer_end(c, select);
-  c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
-  ui->teFeIn->setTextCursor(c);
 }

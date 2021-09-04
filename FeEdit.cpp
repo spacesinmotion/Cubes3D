@@ -1,6 +1,10 @@
 #include "FeEdit.h"
 
+#include "fesyntaxhighlighter.h"
+
 #include <QAbstractItemView>
+#include <QApplication>
+#include <QClipboard>
 #include <QColor>
 #include <QColorDialog>
 #include <QCompleter>
@@ -9,7 +13,7 @@
 #include <QScrollBar>
 #include <QShortcut>
 
-QTextCursor xto_outer(QTextCursor c, bool select = false)
+QTextCursor to_outer(QTextCursor c, bool select = false)
 {
   auto *d = c.document();
   int i = 1;
@@ -29,7 +33,7 @@ QTextCursor xto_outer(QTextCursor c, bool select = false)
   return c;
 }
 
-QTextCursor xto_outer_end(QTextCursor c, bool select = false)
+QTextCursor to_outer_end(QTextCursor c, bool select = false)
 {
   auto *d = c.document();
   int i = 1;
@@ -74,6 +78,8 @@ FeEdit::FeEdit(QWidget *parent)
 
   connect(new QShortcut(Qt::ControlModifier + Qt::Key_Return, this), &QShortcut::activated, this,
           [this] { specialEditDialog(); });
+
+  new FeSyntaxHighlighter(document());
 }
 
 void FeEdit::keyPressEvent(QKeyEvent *ke)
@@ -93,6 +99,33 @@ void FeEdit::keyPressEvent(QKeyEvent *ke)
       break;
     }
   }
+
+  const auto match = [ke](auto m, auto k, auto cb) {
+    if (ke->modifiers() == m && ke->key() == k)
+    {
+      cb();
+      return true;
+    }
+    return false;
+  };
+  if (match(Qt::ControlModifier, Qt::Key_X, [this] { cutSelection(); }) ||
+      match(Qt::ControlModifier, Qt::Key_C, [this] { copySelection(); }) ||
+      match(Qt::ControlModifier, Qt::Key_V, [this] { insertSelection(); }) ||
+      match(Qt::AltModifier, Qt::Key_Up, [this] { cursorToOuterList(); }) ||
+      match(Qt::AltModifier, Qt::Key_Down, [this] { cursorToInnerList(); }) ||
+      match(Qt::AltModifier, Qt::Key_Right, [this] { cursorToNextInList(); }) ||
+      match(Qt::AltModifier, Qt::Key_Left, [this] { cursorToPrevInList(); }) ||
+      match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Up, [this] { cursorToOuterList(true); }) ||
+      match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Down, [this] { cursorToInnerList(true); }) ||
+      match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Right, [this] { cursorToNextInList(true); }) ||
+      match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Left, [this] { cursorToPrevInList(true); }) ||
+      match(Qt::AltModifier, Qt::Key_Home, [this] { cursorToListStart(); }) ||
+      match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Home, [this] { cursorToListStart(true); }) ||
+      match(Qt::AltModifier, Qt::Key_End, [this] { cursorToListEnd(); }) ||
+      match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_End, [this] { cursorToListEnd(true); }) ||
+      match(Qt::ControlModifier, Qt::Key_D, [this] { duplicateSelection(); }))
+    return;
+
   QTextEdit::keyPressEvent(ke);
 
   if (ke->text().isEmpty())
@@ -133,18 +166,6 @@ QTextCursor FeEdit::textUnderCursor() const
   return c;
 }
 
-void FeEdit::cursorToOuterList(bool select)
-{
-  auto c = textCursor();
-  if (select)
-  {
-    c = xto_outer_end(c);
-    c.movePosition(c.Left, c.KeepAnchor);
-  }
-  c = xto_outer(c, select);
-  setTextCursor(c);
-}
-
 void FeEdit::specialEditDialog()
 {
   const auto c = textCursor();
@@ -166,5 +187,140 @@ void FeEdit::specialEditDialog()
     }
   }
 
+  setTextCursor(c);
+}
+
+void FeEdit::duplicateSelection()
+{
+  auto c = textCursor();
+  if (c.hasSelection())
+  {
+    const auto d = c.selectedText();
+    c.clearSelection();
+    c.insertText(d);
+    c.movePosition(c.Left, c.KeepAnchor, d.size());
+  }
+  else
+  {
+    c.select(c.LineUnderCursor);
+    const auto line = c.selectedText();
+    c.movePosition(c.EndOfLine);
+    c.insertText("\n" + line);
+  }
+  setTextCursor(c);
+}
+
+void FeEdit::copySelection(bool remove)
+{
+  auto c = textCursor();
+  auto d = c.selectedText();
+  if (d.isEmpty())
+  {
+    c.select(c.LineUnderCursor);
+    c.movePosition(c.Right, c.KeepAnchor);
+    d = "__::__" + c.selectedText();
+  }
+  if (remove)
+    c.removeSelectedText();
+
+  qApp->clipboard()->setText(d);
+
+  if (remove)
+    setTextCursor(c);
+}
+
+void FeEdit::cutSelection()
+{
+  copySelection(true);
+}
+
+void FeEdit::insertSelection()
+{
+  auto c = textCursor();
+  auto t = qApp->clipboard()->text();
+  if (t.startsWith("__::__"))
+  {
+    c.movePosition(c.StartOfLine);
+    t = t.mid(6);
+  }
+  c.insertText(t);
+}
+
+void FeEdit::cursorToOuterList(bool select)
+{
+  auto c = textCursor();
+  if (select)
+  {
+    c = to_outer_end(c);
+    c.movePosition(c.Left, c.KeepAnchor);
+  }
+  c = to_outer(c, select);
+  setTextCursor(c);
+}
+
+void FeEdit::cursorToInnerList(bool select)
+{
+  auto c = textCursor();
+  auto *d = c.document();
+  while (!c.atEnd() && d->characterAt(c.position()).isSpace())
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  if (d->characterAt(c.position()) == '(')
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  setTextCursor(c);
+}
+
+void FeEdit::cursorToNextInList(bool select)
+{
+  auto c = textCursor();
+  auto *d = c.document();
+  if (d->characterAt(c.position()) == '(')
+  {
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+    c = to_outer_end(c, select);
+  }
+  while (!c.atEnd() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != ')')
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  while (!c.atEnd() && d->characterAt(c.position()).isSpace())
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  setTextCursor(c);
+}
+
+void FeEdit::cursorToPrevInList(bool select)
+{
+  auto c = textCursor();
+  auto *d = c.document();
+
+  c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+  if (d->characterAt(c.position()) == '(')
+    return;
+
+  while (!c.atStart() && d->characterAt(c.position()).isSpace())
+    c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+  if (d->characterAt(c.position()) == ')')
+  {
+    c = to_outer(c, select);
+  }
+  else
+  {
+    while (!c.atStart() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != '(')
+      c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  }
+  setTextCursor(c);
+}
+
+void FeEdit::cursorToListStart(bool select)
+{
+  auto c = textCursor();
+  c = to_outer(c, select);
+  c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  setTextCursor(c);
+}
+
+void FeEdit::cursorToListEnd(bool select)
+{
+  auto c = textCursor();
+  c = to_outer_end(c, select);
+  c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
   setTextCursor(c);
 }
