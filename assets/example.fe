@@ -12,7 +12,7 @@
 (= arm (fn (a)
   (rotateX a
     (translate (vec3 0 0 -0.35)
-      (cube (vec3 0.12 0.15 0.4) (color 115 151 231))))))
+      (cube (vec3 0.12 0.15 0.4) (color 139 231 225))))))
 
 (= leg (fn (freq dir)
   (rotateX (lfo -2 (* dir 25) freq)

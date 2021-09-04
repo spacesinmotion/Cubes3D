@@ -1,10 +1,56 @@
 #include "FeEdit.h"
 
 #include <QAbstractItemView>
+#include <QColor>
+#include <QColorDialog>
 #include <QCompleter>
 #include <QDebug>
 #include <QKeyEvent>
 #include <QScrollBar>
+#include <QShortcut>
+
+QTextCursor xto_outer(QTextCursor c, bool select = false)
+{
+  auto *d = c.document();
+  int i = 1;
+  while (!c.atStart())
+  {
+    c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+    auto x = d->characterAt(c.position());
+    if (x == '(')
+    {
+      --i;
+      if (i == 0)
+        break;
+    }
+    else if (x == ')')
+      ++i;
+  }
+  return c;
+}
+
+QTextCursor xto_outer_end(QTextCursor c, bool select = false)
+{
+  auto *d = c.document();
+  int i = 1;
+  while (!c.atEnd())
+  {
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+    auto x = d->characterAt(c.position());
+    if (x == ')')
+    {
+      --i;
+      if (i == 0)
+      {
+        c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+        break;
+      }
+    }
+    else if (x == '(')
+      ++i;
+  }
+  return c;
+}
 
 FeEdit::FeEdit(QWidget *parent)
   : QTextEdit(parent)
@@ -25,6 +71,9 @@ FeEdit::FeEdit(QWidget *parent)
 
   connect(m_complete, qOverload<const QString &>(&QCompleter::activated), this,
           [this](const auto &t) { insertCompletion(t); });
+
+  connect(new QShortcut(Qt::ControlModifier + Qt::Key_Return, this), &QShortcut::activated, this,
+          [this] { specialEditDialog(); });
 }
 
 void FeEdit::keyPressEvent(QKeyEvent *ke)
@@ -82,4 +131,40 @@ QTextCursor FeEdit::textUnderCursor() const
     c.movePosition(c.Left, c.KeepAnchor);
   } while (!c.atStart() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != '(');
   return c;
+}
+
+void FeEdit::cursorToOuterList(bool select)
+{
+  auto c = textCursor();
+  if (select)
+  {
+    c = xto_outer_end(c);
+    c.movePosition(c.Left, c.KeepAnchor);
+  }
+  c = xto_outer(c, select);
+  setTextCursor(c);
+}
+
+void FeEdit::specialEditDialog()
+{
+  const auto c = textCursor();
+  cursorToOuterList(true);
+  auto t = textCursor().selectedText();
+  if (t.startsWith("(color"))
+  {
+    t.replace("(", "").replace(")", "");
+    auto es = t.split(' ', Qt::SkipEmptyParts);
+    if (es.size() >= 4)
+    {
+      QColor c(es[1].toInt(), es[2].toInt(), es[3].toInt());
+      c = QColorDialog::getColor(c, this);
+      if (c.isValid())
+      {
+        const auto text = QString("(color %1 %2 %3)").arg(c.red()).arg(c.green()).arg(c.blue());
+        textCursor().insertText(text);
+      }
+    }
+  }
+
+  setTextCursor(c);
 }
