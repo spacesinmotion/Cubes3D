@@ -59,16 +59,17 @@ QTextCursor to_outer_end(QTextCursor c, bool select = false)
 FeEdit::FeEdit(QWidget *parent)
   : QTextEdit(parent)
 {
-  QStringList forms = {"(vec3 0 0 0)",
-                       "(color 0 0 0)",
-                       "(fn (%1) %2)",
-                       "(= %1 %2)",
-                       "(rotateX 0 %1)",
-                       "(rotateY 0 %1)",
-                       "(rotateZ 0 %1)",
-                       "(rotate 0 (vec3 1 0 0) %1)",
-                       "(translate (vec3 0 0 0) %1)",
-                       "(cube (vec3 1 1 1) (color 0 0 0))"};
+  const QStringList forms = {"(vec3 0 0 0)",
+                             "(color 0 0 0)",
+                             "(fn (%1) %2)",
+                             "(= %1 %2)",
+                             "(rotateX 0 %1)",
+                             "(rotateY 0 %1)",
+                             "(rotateZ 0 %1)",
+                             "(rotate 0 (vec3 1 0 0) %1)",
+                             "(translate (vec3 0 0 0) %1)",
+                             "(lfo %1 %2 &3)",
+                             "(cube (vec3 1 1 1) (color 0 0 0))"};
   m_complete = new QCompleter(forms, this);
   m_complete->setCaseSensitivity(Qt::CaseInsensitive);
   m_complete->setWidget(this);
