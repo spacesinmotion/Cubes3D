@@ -10,6 +10,49 @@
 #include <QShortcut>
 #include <QTimer>
 
+QTextCursor to_outer(QTextCursor c, bool select = false)
+{
+  auto *d = c.document();
+  int i = 1;
+  while (!c.atStart())
+  {
+    c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+    auto x = d->characterAt(c.position());
+    if (x == '(')
+    {
+      --i;
+      if (i == 0)
+        break;
+    }
+    else if (x == ')')
+      ++i;
+  }
+  return c;
+}
+
+QTextCursor to_outer_end(QTextCursor c, bool select = false)
+{
+  auto *d = c.document();
+  int i = 1;
+  while (!c.atEnd())
+  {
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+    auto x = d->characterAt(c.position());
+    if (x == ')')
+    {
+      --i;
+      if (i == 0)
+      {
+        c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+        break;
+      }
+    }
+    else if (x == '(')
+      ++i;
+  }
+  return c;
+}
+
 Cubes3D::Cubes3D(QWidget *parent)
   : QMainWindow(parent)
   , ui(new Ui::Cubes3D)
@@ -88,6 +131,14 @@ bool Cubes3D::eventFilter(QObject *o, QEvent *e)
     return match(Qt::ControlModifier, Qt::Key_X, [this] { cutSelection(); }) ||
            match(Qt::ControlModifier, Qt::Key_C, [this] { copySelection(); }) ||
            match(Qt::ControlModifier, Qt::Key_V, [this] { insertSelection(); }) ||
+           match(Qt::AltModifier, Qt::Key_Up, [this] { cursorToOuterList(); }) ||
+           match(Qt::AltModifier, Qt::Key_Down, [this] { cursorToInnerList(); }) ||
+           match(Qt::AltModifier, Qt::Key_Right, [this] { cursorToNextInList(); }) ||
+           match(Qt::AltModifier, Qt::Key_Left, [this] { cursorToPrevInList(); }) ||
+           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Up, [this] { cursorToOuterList(true); }) ||
+           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Down, [this] { cursorToInnerList(true); }) ||
+           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Right, [this] { cursorToNextInList(true); }) ||
+           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Left, [this] { cursorToPrevInList(true); }) ||
            match(Qt::ControlModifier, Qt::Key_D, [this] { duplicateSelection(); });
   }
   return false;
@@ -341,4 +392,67 @@ void Cubes3D::insertSelection()
     t = t.mid(6);
   }
   c.insertText(t);
+}
+
+void Cubes3D::cursorToOuterList(bool select)
+{
+  auto c = ui->teFeIn->textCursor();
+  if (select)
+  {
+    c = to_outer_end(c);
+    c.movePosition(c.Left, c.KeepAnchor);
+  }
+  c = to_outer(c, select);
+  ui->teFeIn->setTextCursor(c);
+}
+
+void Cubes3D::cursorToInnerList(bool select)
+{
+  auto c = ui->teFeIn->textCursor();
+  auto *d = c.document();
+  while (!c.atEnd() && d->characterAt(c.position()).isSpace())
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  if (d->characterAt(c.position()) == '(')
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  ui->teFeIn->setTextCursor(c);
+}
+
+void Cubes3D::cursorToNextInList(bool select)
+{
+  auto c = ui->teFeIn->textCursor();
+  auto *d = c.document();
+  if (d->characterAt(c.position()) == '(')
+  {
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+    c = to_outer_end(c, select);
+  }
+  while (!c.atEnd() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != ')')
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  while (!c.atEnd() && d->characterAt(c.position()).isSpace())
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  ui->teFeIn->setTextCursor(c);
+}
+
+void Cubes3D::cursorToPrevInList(bool select)
+{
+  auto c = ui->teFeIn->textCursor();
+  auto *d = c.document();
+
+  c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+  if (d->characterAt(c.position()) == '(')
+    return;
+
+  while (!c.atStart() && d->characterAt(c.position()).isSpace())
+    c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+  if (d->characterAt(c.position()) == ')')
+  {
+    c = to_outer(c, select);
+  }
+  else
+  {
+    while (!c.atStart() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != '(')
+      c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
+    c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  }
+  ui->teFeIn->setTextCursor(c);
 }

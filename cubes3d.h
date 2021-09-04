@@ -45,6 +45,11 @@ private:
   void cutSelection();
   void insertSelection();
 
+  void cursorToOuterList(bool select = false);
+  void cursorToInnerList(bool select = false);
+  void cursorToNextInList(bool select = false);
+  void cursorToPrevInList(bool select = false);
+
 private:
   Ui::Cubes3D *ui;
 
