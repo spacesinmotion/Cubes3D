@@ -35,8 +35,6 @@ private:
   void timerEvent(QTimerEvent *t) final;
   bool eventFilter(QObject *o, QEvent *e) final;
 
-  void additionalHighlights();
-
   void updateAnimation();
   void updateAnimationList();
 

@@ -34,8 +34,6 @@ Cubes3D::Cubes3D(QWidget *parent)
       open_file(recent.front());
   });
 
-  connect(ui->teFeIn, &QTextEdit::cursorPositionChanged, this, &Cubes3D::additionalHighlights);
-
   startTimer(1000 / 20);
 }
 
@@ -70,61 +68,6 @@ bool Cubes3D::eventFilter(QObject *o, QEvent *e)
   if (o == ui->teFeIn && (e->type() == QEvent::KeyRelease || e->type() == QEvent::KeyPress))
   {}
   return false;
-}
-
-void Cubes3D::additionalHighlights()
-{
-  QList<QTextEdit::ExtraSelection> extraSelections;
-
-  QTextEdit::ExtraSelection selection;
-  selection.format.setBackground(QColor(153, 211, 218, 50));
-  selection.format.setProperty(QTextFormat::FullWidthSelection, true);
-  selection.cursor = ui->teFeIn->textCursor();
-  selection.cursor.clearSelection();
-  extraSelections.append(selection);
-
-  selection.format.setBackground(QColor(103, 161, 88, 100));
-  selection.cursor = ui->teFeIn->textCursor();
-  int closed = 1;
-  do
-  {
-    selection.cursor.clearSelection();
-    selection.cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor);
-    const auto t = selection.cursor.selectedText();
-    if (t == ")")
-      ++closed;
-    else if (t == "(")
-    {
-      --closed;
-      if (closed == 0)
-      {
-        extraSelections.append(selection);
-        break;
-      }
-    }
-  } while (selection.cursor.position() > 0);
-
-  selection.cursor = ui->teFeIn->textCursor();
-  closed = 1;
-  do
-  {
-    selection.cursor.clearSelection();
-    selection.cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
-    const auto t = selection.cursor.selectedText();
-    if (t == "(")
-      ++closed;
-    else if (t == ")")
-    {
-      --closed;
-      if (closed == 0)
-      {
-        extraSelections.append(selection);
-        break;
-      }
-    }
-  } while (!selection.cursor.atEnd());
-
-  ui->teFeIn->setExtraSelections(extraSelections);
 }
 
 void Cubes3D::open_file(const QString &f)

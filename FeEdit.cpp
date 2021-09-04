@@ -80,6 +80,8 @@ FeEdit::FeEdit(QWidget *parent)
           [this] { specialEditDialog(); });
 
   new FeSyntaxHighlighter(document());
+
+  connect(this, &QTextEdit::cursorPositionChanged, this, &FeEdit::additionalHighlights);
 }
 
 void FeEdit::keyPressEvent(QKeyEvent *ke)
@@ -164,6 +166,61 @@ QTextCursor FeEdit::textUnderCursor() const
     c.movePosition(c.Left, c.KeepAnchor);
   } while (!c.atStart() && !d->characterAt(c.position()).isSpace() && d->characterAt(c.position()) != '(');
   return c;
+}
+
+void FeEdit::additionalHighlights()
+{
+  QList<QTextEdit::ExtraSelection> extraSelections;
+
+  QTextEdit::ExtraSelection selection;
+  selection.format.setBackground(QColor(153, 211, 218, 50));
+  selection.format.setProperty(QTextFormat::FullWidthSelection, true);
+  selection.cursor = textCursor();
+  selection.cursor.clearSelection();
+  extraSelections.append(selection);
+
+  selection.format.setBackground(QColor(103, 161, 88, 100));
+  selection.cursor = textCursor();
+  int closed = 1;
+  do
+  {
+    selection.cursor.clearSelection();
+    selection.cursor.movePosition(QTextCursor::Left, QTextCursor::KeepAnchor);
+    const auto t = selection.cursor.selectedText();
+    if (t == ")")
+      ++closed;
+    else if (t == "(")
+    {
+      --closed;
+      if (closed == 0)
+      {
+        extraSelections.append(selection);
+        break;
+      }
+    }
+  } while (selection.cursor.position() > 0);
+
+  selection.cursor = textCursor();
+  closed = 1;
+  do
+  {
+    selection.cursor.clearSelection();
+    selection.cursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
+    const auto t = selection.cursor.selectedText();
+    if (t == "(")
+      ++closed;
+    else if (t == ")")
+    {
+      --closed;
+      if (closed == 0)
+      {
+        extraSelections.append(selection);
+        break;
+      }
+    }
+  } while (!selection.cursor.atEnd());
+
+  setExtraSelections(extraSelections);
 }
 
 void FeEdit::specialEditDialog()

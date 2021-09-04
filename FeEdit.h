@@ -16,6 +16,8 @@ private:
   void insertCompletion(const QString &completion);
   QTextCursor textUnderCursor() const;
 
+  void additionalHighlights();
+
   void specialEditDialog();
 
   void duplicateSelection();
