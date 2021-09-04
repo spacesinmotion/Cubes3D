@@ -11,7 +11,6 @@ public:
 
 protected:
   void keyPressEvent(QKeyEvent *e) override;
-  void focusInEvent(QFocusEvent *e) override;
 
 private:
   void insertCompletion(const QString &completion);

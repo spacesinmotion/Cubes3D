@@ -72,9 +72,6 @@ Cubes3D::Cubes3D(QWidget *parent)
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
   ui->teFeIn->installEventFilter(this);
 
-  for (auto *sc : ui->teFeIn->findChildren<QShortcut *>())
-    qDebug() << sc->key();
-
   QTimer::singleShot(10, this, [this] {
     QSettings s;
     const auto recent = s.value("Main/RecentFiles").toStringList();
@@ -469,6 +466,7 @@ void Cubes3D::cursorToListStart(bool select)
   c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
   ui->teFeIn->setTextCursor(c);
 }
+
 void Cubes3D::cursorToListEnd(bool select)
 {
   auto c = ui->teFeIn->textCursor();

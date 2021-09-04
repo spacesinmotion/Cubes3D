@@ -31,7 +31,6 @@ void FeEdit::keyPressEvent(QKeyEvent *ke)
 {
   if (m_complete->popup()->isVisible())
   {
-    // The following keys are forwarded by the completer to the widget
     switch (ke->key())
     {
     case Qt::Key_Enter:
@@ -40,7 +39,7 @@ void FeEdit::keyPressEvent(QKeyEvent *ke)
     case Qt::Key_Tab:
     case Qt::Key_Backtab:
       ke->ignore();
-      return; // let the completer do default behavior
+      return;
     default:
       break;
     }
@@ -63,11 +62,6 @@ void FeEdit::keyPressEvent(QKeyEvent *ke)
   }
   else
     m_complete->popup()->hide();
-}
-
-void FeEdit::focusInEvent(QFocusEvent *e)
-{
-  QTextEdit::focusInEvent(e);
 }
 
 void FeEdit::insertCompletion(const QString &completion)
