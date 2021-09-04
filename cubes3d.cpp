@@ -139,6 +139,10 @@ bool Cubes3D::eventFilter(QObject *o, QEvent *e)
            match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Down, [this] { cursorToInnerList(true); }) ||
            match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Right, [this] { cursorToNextInList(true); }) ||
            match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Left, [this] { cursorToPrevInList(true); }) ||
+           match(Qt::AltModifier, Qt::Key_Home, [this] { cursorToListStart(); }) ||
+           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Home, [this] { cursorToListStart(true); }) ||
+           match(Qt::AltModifier, Qt::Key_End, [this] { cursorToListEnd(); }) ||
+           match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_End, [this] { cursorToListEnd(true); }) ||
            match(Qt::ControlModifier, Qt::Key_D, [this] { duplicateSelection(); });
   }
   return false;
@@ -454,5 +458,20 @@ void Cubes3D::cursorToPrevInList(bool select)
       c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
     c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
   }
+  ui->teFeIn->setTextCursor(c);
+}
+
+void Cubes3D::cursorToListStart(bool select)
+{
+  auto c = ui->teFeIn->textCursor();
+  c = to_outer(c, select);
+  c.movePosition(c.Right, select ? c.KeepAnchor : c.MoveAnchor);
+  ui->teFeIn->setTextCursor(c);
+}
+void Cubes3D::cursorToListEnd(bool select)
+{
+  auto c = ui->teFeIn->textCursor();
+  c = to_outer_end(c, select);
+  c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
   ui->teFeIn->setTextCursor(c);
 }

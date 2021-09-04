@@ -49,6 +49,8 @@ private:
   void cursorToInnerList(bool select = false);
   void cursorToNextInList(bool select = false);
   void cursorToPrevInList(bool select = false);
+  void cursorToListStart(bool select = false);
+  void cursorToListEnd(bool select = false);
 
 private:
   Ui::Cubes3D *ui;
