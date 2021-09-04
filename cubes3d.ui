@@ -36,7 +36,7 @@
        <property name="orientation">
         <enum>Qt::Vertical</enum>
        </property>
-       <widget class="QTextEdit" name="teFeIn">
+       <widget class="FeEdit" name="teFeIn">
         <property name="font">
          <font>
           <family>Consolas</family>
@@ -56,7 +56,7 @@
         </property>
        </widget>
       </widget>
-      <widget class="QWidget" name="">
+      <widget class="QWidget" name="layoutWidget">
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QComboBox" name="cbAnimation"/>
@@ -149,6 +149,11 @@
    <extends>QWidget</extends>
    <header>view3d.h</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>FeEdit</class>
+   <extends>QTextEdit</extends>
+   <header>FeEdit.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

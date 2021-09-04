@@ -41,6 +41,8 @@ add_executable(Cubes3D
     renderobject.cpp
     fesyntaxhighlighter.h
     fesyntaxhighlighter.cpp
+    FeEdit.h
+    FeEdit.cpp
     fe/fe.c
     rply/rply.c
     shader.qrc

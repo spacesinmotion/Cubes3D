@@ -4,6 +4,7 @@
 #include "ui_cubes3d.h"
 
 #include <QClipboard>
+#include <QCompleter>
 #include <QFileDialog>
 #include <QPainter>
 #include <QSettings>
@@ -118,11 +119,11 @@ bool Cubes3D::eventFilter(QObject *o, QEvent *e)
 {
   if (o == ui->teFeIn && (e->type() == QEvent::KeyRelease || e->type() == QEvent::KeyPress))
   {
-    const auto match = [e](auto m, auto k, auto cb) {
-      const auto *ke = static_cast<QKeyEvent *>(e);
+    const auto *ke = static_cast<QKeyEvent *>(e);
+    const auto match = [ke](auto m, auto k, auto cb) {
       if (ke->modifiers() == m && ke->key() == k)
       {
-        if (e->type() == QEvent::KeyRelease)
+        if (ke->type() == QEvent::KeyRelease)
           cb();
         return true;
       }
