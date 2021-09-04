@@ -59,7 +59,8 @@ QTextCursor to_outer_end(QTextCursor c, bool select = false)
 FeEdit::FeEdit(QWidget *parent)
   : QTextEdit(parent)
 {
-  QStringList forms = {"(vec3 0 0 0)",
+  QStringList forms = {"()",
+                       "(vec3 0 0 0)",
                        "(color 0 0 0)",
                        "(fn (&1) &2)",
                        "(mac (&1) &2)",
