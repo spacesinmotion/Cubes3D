@@ -75,9 +75,9 @@ FeEdit::FeEdit(QWidget *parent)
                        "(translate (vec3 0 0 0) &1)",
                        "(lfo &1 &2 &3)",
                        "(cube (vec3 1 1 1) (color 0 0 0))"};
-  for (const auto *x : {"quote", "and", "or",    "do",    "cons", "car", "cdr", "setcar", "setcdr",   "list",
-                        "not",   "is",  "atom",  "print", "sin",  "cos", "tan", "asin",   "acos",     "atan",
-                        "deg",   "rad", "floor", "ceil",  "sqrt", "abs", "max", "min",    "animation"})
+  for (const auto *x : {"quote", "and", "or",    "do",    "cons", "car", "cdr", "setcar", "setcdr",    "list",
+                        "not",   "is",  "atom",  "print", "sin",  "cos", "tan", "asin",   "acos",      "atan",
+                        "deg",   "rad", "floor", "ceil",  "sqrt", "abs", "max", "min",    "animation", "require"})
     forms << QString("(%1 &1)").arg(x);
   m_complete = new QCompleter(forms, this);
   m_complete->setCaseSensitivity(Qt::CaseInsensitive);
