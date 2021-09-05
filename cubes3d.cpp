@@ -78,6 +78,7 @@ void Cubes3D::open_file(const QString &f)
   QFile fi(f);
   if (fi.open(QFile::ReadOnly))
   {
+    QDir::setCurrent(QFileInfo(m_feFile).absolutePath());
     const auto fe = fi.readAll();
     ui->teFeIn->setText(fi.readAll());
     eval_text(fe);

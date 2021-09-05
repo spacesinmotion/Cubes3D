@@ -49,6 +49,9 @@ private:
 
   static fe_Object *_lfo(fe_Context *ctx, fe_Object *arg);
 
+  static QString _eval(fe_Context *ctx, const QString &);
+  static fe_Object *_require(fe_Context *ctx, fe_Object *arg);
+
   static void init_fn(fe_Context *ctx);
 
 private:

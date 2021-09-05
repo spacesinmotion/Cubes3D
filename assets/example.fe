@@ -1,13 +1,17 @@
+(require "colors")
+
+(require "base.colors")
+
 (= lp (vec3 0.4 -2 5))
 
 (= body (fn (a)
   (translate a
-    (cube (vec3 0.4 0.25 0.45) (color 174 196 231)))))
+    (cube (vec3 0.4 0.25 0.45) red))))
 
 (= head (fn (freq)
   (translate (lfo (vec3 0 0 0) (vec3 0 0 0.015) (* 2 freq))
     (rotateY (lfo 0 1 freq)
-      (cube (vec3 0.45 0.35 0.35) (color 231 177 189))))))
+      (cube (vec3 0.45 0.35 0.35) green)))))
 
 (= arm (fn (a)
   (rotateX a

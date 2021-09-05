@@ -4,6 +4,8 @@
 #include "renderobject.h"
 
 #include <QDebug>
+#include <QDir>
+#include <QFile>
 #include <string>
 #include <variant>
 #include <vector>
@@ -200,26 +202,10 @@ QString FeWrap::eval(const QString &fe, SceneHandler &sh)
 {
   setlocale(LC_ALL, "C");
 
-  const auto fet = fe.toLocal8Bit();
-  auto it = fet.begin();
-
   int gcx = fe_savegc(m_fe);
   fe_set(m_fe, fe_symbol(m_fe, "scene"), custom(m_fe, &sh));
 
-  QString last_text;
-
-  int gc = fe_savegc(m_fe);
-  for (;;)
-  {
-    auto *r = fe_read(m_fe, read_fn, &it);
-    if (!r)
-      break;
-
-    auto *o = fe_eval(m_fe, r);
-    last_text = from_string(m_fe, o);
-
-    fe_restoregc(m_fe, gc);
-  }
+  const auto last_text = _eval(m_fe, fe);
 
   fe_restoregc(m_fe, gcx);
 
@@ -509,6 +495,42 @@ fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
   return _lfo_i(ctx, center, amp, frequency);
 }
 
+QString FeWrap::_eval(fe_Context *ctx, const QString &fe)
+{
+  QString last_text;
+  const auto fet = fe.toLocal8Bit();
+  auto it = fet.begin();
+
+  int gc = fe_savegc(ctx);
+  for (;;)
+  {
+    auto *r = fe_read(ctx, read_fn, &it);
+    if (!r)
+      break;
+
+    auto *o = fe_eval(ctx, r);
+    last_text = from_string(ctx, o);
+
+    fe_restoregc(ctx, gc);
+  }
+  return last_text;
+}
+
+fe_Object *FeWrap::_require(fe_Context *ctx, fe_Object *arg)
+{
+  auto f = from_string(ctx, fe_nextarg(ctx, &arg));
+  f.replace(".", QDir::separator());
+  f += ".fe";
+
+  QFile fi(f);
+  if (fi.open(QFile::ReadOnly))
+    _eval(ctx, fi.readAll());
+  else
+    fe_error(ctx, "Did not found file!");
+
+  return fe_bool(ctx, false);
+}
+
 [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
 {
   auto x = QString(err);
@@ -574,4 +596,6 @@ void FeWrap::init_fn(fe_Context *ctx)
   fe_set(ctx, fe_symbol(ctx, "scale"), fe_cfunc(ctx, _scale));
 
   fe_set(ctx, fe_symbol(ctx, "animation"), fe_cfunc(ctx, _animation));
+
+  fe_set(ctx, fe_symbol(ctx, "require"), fe_cfunc(ctx, _require));
 }
