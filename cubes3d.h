@@ -4,6 +4,9 @@
 #include "fewrap.h"
 
 #include <QMainWindow>
+#include <QPointer>
+
+class QLineEdit;
 
 namespace Ui
 {
@@ -38,8 +41,13 @@ private:
   void updateAnimation();
   void updateAnimationList();
 
+  void showCommandPanel(const QStringList &, const std::function<void(const QString &)> &cb);
+  void selectAnimation();
+
 private:
   Ui::Cubes3D *ui;
+
+  QPointer<QLineEdit> m_commandPanel;
 
   QString m_feFile;
   FeWrap m_feWrap;

@@ -5,6 +5,7 @@
 #include <QClipboard>
 #include <QCompleter>
 #include <QFileDialog>
+#include <QLineEdit>
 #include <QPainter>
 #include <QSettings>
 #include <QShortcut>
@@ -26,6 +27,9 @@ Cubes3D::Cubes3D(QWidget *parent)
   ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
   connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
+
+  connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { selectAnimation(); });
+  connect(new QShortcut(Qt::Key_Escape, this), &QShortcut::activated, this, [this] { delete m_commandPanel; });
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -210,4 +214,35 @@ void Cubes3D::updateAnimationList()
   ui->cbAnimation->addItems(ui->view3d->animations());
   ui->cbAnimation->setCurrentIndex(std::max(0, ui->cbAnimation->findText(last)));
   on_cbAnimation_currentIndexChanged(ui->cbAnimation->currentText());
+}
+
+void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)
+{
+  if (m_commandPanel)
+    delete m_commandPanel;
+
+  auto *le = new QLineEdit(this);
+  m_commandPanel = le;
+
+  auto *c = new QCompleter(list, le);
+  c->setCaseSensitivity(Qt::CaseInsensitive);
+  connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, le, cb](const auto &t) {
+    delete le;
+    cb(t);
+  });
+  le->setCompleter(c);
+
+  const auto w = width() / 2;
+  const auto h = le->sizeHint().height();
+  le->setGeometry(QRect(width() / 4, 0, w, h));
+
+  le->show();
+  le->setFocus();
+  c->complete(le->rect());
+}
+
+void Cubes3D::selectAnimation()
+{
+  showCommandPanel(ui->view3d->animations(),
+                   [this](const auto &s) { ui->cbAnimation->setCurrentIndex(ui->cbAnimation->findText(s)); });
 }
