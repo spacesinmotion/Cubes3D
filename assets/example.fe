@@ -1,6 +1,7 @@
 (require "colors")
 
-(require "base.colors")
+(= ccc
+  (require "base.colors"))
 
 (= lp (vec3 0.4 -2 5))
 

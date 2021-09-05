@@ -205,7 +205,7 @@ QString FeWrap::eval(const QString &fe, SceneHandler &sh)
   int gcx = fe_savegc(m_fe);
   fe_set(m_fe, fe_symbol(m_fe, "scene"), custom(m_fe, &sh));
 
-  const auto last_text = _eval(m_fe, fe);
+  const auto last_text = from_string(m_fe, _eval(m_fe, fe));
 
   fe_restoregc(m_fe, gcx);
 
@@ -495,40 +495,35 @@ fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
   return _lfo_i(ctx, center, amp, frequency);
 }
 
-QString FeWrap::_eval(fe_Context *ctx, const QString &fe)
+fe_Object *FeWrap::_eval(fe_Context *ctx, const QString &fe)
 {
-  QString last_text;
   const auto fet = fe.toLocal8Bit();
   auto it = fet.begin();
 
+  fe_Object *last{nullptr};
   int gc = fe_savegc(ctx);
   for (;;)
   {
     auto *r = fe_read(ctx, read_fn, &it);
     if (!r)
       break;
-
-    auto *o = fe_eval(ctx, r);
-    last_text = from_string(ctx, o);
+    last = fe_eval(ctx, r);
 
     fe_restoregc(ctx, gc);
+    fe_pushgc(ctx, last);
   }
-  return last_text;
+  return last;
 }
 
 fe_Object *FeWrap::_require(fe_Context *ctx, fe_Object *arg)
 {
-  auto f = from_string(ctx, fe_nextarg(ctx, &arg));
-  f.replace(".", QDir::separator());
-  f += ".fe";
+  const auto f = from_string(ctx, fe_nextarg(ctx, &arg)).replace(".", QDir::separator()).append(".fe");
 
   QFile fi(f);
-  if (fi.open(QFile::ReadOnly))
-    _eval(ctx, fi.readAll());
-  else
+  if (!fi.open(QFile::ReadOnly))
     fe_error(ctx, "Did not found file!");
 
-  return fe_bool(ctx, false);
+  return _eval(ctx, fi.readAll());
 }
 
 [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
