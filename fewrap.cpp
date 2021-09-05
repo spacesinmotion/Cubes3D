@@ -307,6 +307,59 @@ QString FeWrap::format(const QString &fe)
   return made;
 }
 
+static QString asDefinition(fe_Context *ctx, fe_Object *o)
+{
+  if (fe_type(ctx, o) == FE_TPAIR)
+  {
+    auto *s = fe_nextarg(ctx, &o);
+    if (fe_type(ctx, s) == FE_TSYMBOL)
+    {
+      if (from_string(ctx, s) == "=")
+      {
+        s = fe_nextarg(ctx, &o);
+        if (fe_type(ctx, s) == FE_TSYMBOL)
+          return from_string(ctx, s);
+      }
+    }
+  }
+
+  return QString();
+}
+
+void FeWrap::eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb)
+{
+  const auto fet = fe.toLocal8Bit();
+  auto it = fet.begin();
+
+  int gc = fe_savegc(m_fe);
+
+  int line = 1;
+  for (;;)
+  {
+    while (it < fet.end() && QChar(*it).isSpace())
+    {
+      if (*it == '\n')
+        ++line;
+      ++it;
+    }
+    auto oldIt = it;
+    auto *r = fe_read(m_fe, read_fn, &it);
+    if (!r)
+      break;
+
+    const auto def = asDefinition(m_fe, r);
+    if (!def.isEmpty())
+    {
+      cb(line, def);
+    }
+    for (; oldIt < it; ++oldIt)
+      if (*oldIt == '\n')
+        line++;
+
+    fe_restoregc(m_fe, gc);
+  }
+}
+
 fe_Object *FeWrap::_mod(fe_Context *ctx, fe_Object *arg)
 {
   auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));

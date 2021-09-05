@@ -7,6 +7,7 @@
 #include <QPointer>
 
 class QLineEdit;
+class QLabel;
 
 namespace Ui
 {
@@ -36,7 +37,6 @@ private slots:
 private:
   void closeEvent(QCloseEvent *e) final;
   void timerEvent(QTimerEvent *t) final;
-  bool eventFilter(QObject *o, QEvent *e) final;
 
   void updateAnimation();
   void updateAnimationList();
@@ -46,6 +46,7 @@ private:
   void showCommands();
   void selectAnimation();
   void openRecentFile();
+  void goToDefinition();
 
   void addAction(const QString &name, const std::function<void()> &t);
 
@@ -53,6 +54,7 @@ private:
   Ui::Cubes3D *ui;
 
   QPointer<QLineEdit> m_commandPanel;
+  QLabel *m_lineColumn{nullptr};
 
   QString m_feFile;
   FeWrap m_feWrap;

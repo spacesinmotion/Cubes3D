@@ -24,6 +24,9 @@ public:
 
   QString format(const QString &fe);
 
+  using LineDefinitionCB = std::function<void(int, const QString &)>;
+  void eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb);
+
 private:
   static fe_Object *_mod(fe_Context *ctx, fe_Object *arg);
 

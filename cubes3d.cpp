@@ -2,6 +2,7 @@
 
 #include "ui_cubes3d.h"
 
+#include <QAbstractItemView>
 #include <QClipboard>
 #include <QCompleter>
 #include <QFileDialog>
@@ -9,6 +10,7 @@
 #include <QPainter>
 #include <QSettings>
 #include <QShortcut>
+#include <QStatusBar>
 #include <QTimer>
 
 Cubes3D::Cubes3D(QWidget *parent)
@@ -16,6 +18,13 @@ Cubes3D::Cubes3D(QWidget *parent)
   , ui(new Ui::Cubes3D)
 {
   ui->setupUi(this);
+  m_lineColumn = new QLabel{QString("0,0"), this};
+  m_lineColumn->setFont(ui->teFeIn->font());
+  statusBar()->addPermanentWidget(m_lineColumn);
+  connect(ui->teFeIn, &QTextEdit::cursorPositionChanged, this, [this] {
+    const auto c = ui->teFeIn->textCursor();
+    m_lineColumn->setText(QString("%1, %2").arg(c.blockNumber() + 1, 3).arg(c.columnNumber(), 3));
+  });
 
   QSettings s;
   restoreGeometry(s.value("Main/geomtry").toByteArray());
@@ -26,12 +35,18 @@ Cubes3D::Cubes3D(QWidget *parent)
   QSignalBlocker block(ui->cbAnimation);
   ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
-  connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { showCommands(); });
-  connect(new QShortcut(Qt::Key_Escape, this), &QShortcut::activated, this, [this] { delete m_commandPanel; });
-
   addAction("select animation", [this] { selectAnimation(); });
   addAction("open recent file", [this] { openRecentFile(); });
   addAction("update animation", [this] { updateAnimation(); });
+  addAction("go to definition", [this] { goToDefinition(); });
+
+  connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { showCommands(); });
+  connect(new QShortcut(Qt::Key_Escape, this), &QShortcut::activated, this, [this] {
+    delete m_commandPanel;
+    ui->teFeIn->setFocus();
+  });
+  connect(new QShortcut(Qt::ControlModifier + Qt::Key_M, this), &QShortcut::activated, this,
+          [this] { goToDefinition(); });
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -67,13 +82,6 @@ void Cubes3D::timerEvent(QTimerEvent *t)
 
   ui->laPixelPreview->setPixmap(m_animation[m_animationStep % m_animation.size()].scaled(w * s, h * s));
   ++m_animationStep;
-}
-
-bool Cubes3D::eventFilter(QObject *o, QEvent *e)
-{
-  if (o == ui->teFeIn && (e->type() == QEvent::KeyRelease || e->type() == QEvent::KeyPress))
-  {}
-  return false;
 }
 
 void Cubes3D::open_file(const QString &f)
@@ -221,15 +229,19 @@ void Cubes3D::updateAnimationList()
 void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)
 {
   if (!m_commandPanel)
+  {
     m_commandPanel = new QLineEdit(this);
+    m_commandPanel->setFont(ui->teFeIn->font());
 
-  auto *c = new QCompleter(list, m_commandPanel);
-  c->setCaseSensitivity(Qt::CaseInsensitive);
-  connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, cb](const auto &t) {
-    delete m_commandPanel;
-    cb(t);
-  });
-  m_commandPanel->setCompleter(c);
+    auto *c = new QCompleter(list, m_commandPanel);
+    c->setCaseSensitivity(Qt::CaseInsensitive);
+    c->popup()->setFont(ui->teFeIn->font());
+    connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, cb](const auto &t) {
+      delete m_commandPanel;
+      cb(t);
+    });
+    m_commandPanel->setCompleter(c);
+  }
 
   const auto w = width() / 2;
   const auto h = m_commandPanel->sizeHint().height();
@@ -237,7 +249,7 @@ void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void
 
   m_commandPanel->show();
   m_commandPanel->setFocus();
-  c->complete(m_commandPanel->rect());
+  m_commandPanel->completer()->complete(m_commandPanel->rect());
 }
 
 void getAllActions(const QList<QAction *> &actions, QHash<QString, QAction *> &a)
@@ -271,6 +283,35 @@ void Cubes3D::selectAnimation()
 void Cubes3D::openRecentFile()
 {
   showCommandPanel(QSettings().value("Main/RecentFiles").toStringList(), [this](const auto &s) { open_file(s); });
+}
+
+void Cubes3D::goToDefinition()
+{
+  const auto fe = ui->teFeIn->toPlainText();
+
+  QList<QPair<int, QString>> def;
+  int maxLength = 0;
+  m_feWrap.eachDefinitionAtLine(fe, [&](int l, const auto &d) {
+    def << qMakePair(l, d);
+    maxLength = std::max(maxLength, d.size());
+  });
+
+  maxLength += 4;
+  QStringList defNames;
+  for (const auto &d : def)
+    defNames << QString("%1%3:%2").arg(d.second).arg(d.first, 3).arg(QString(maxLength - d.second.size(), ' '));
+
+  showCommandPanel(defNames, [this](const auto &s) {
+    const auto line = s.split(":").back().toInt() - 1;
+    auto c = ui->teFeIn->textCursor();
+    c.movePosition(c.StartOfLine);
+    while (c.blockNumber() > line && !c.atStart())
+      c.movePosition(c.Up);
+    while (c.blockNumber() < line && !c.atEnd())
+      c.movePosition(c.Down);
+    ui->teFeIn->setTextCursor(c);
+    ui->teFeIn->setFocus();
+  });
 }
 
 void Cubes3D::addAction(const QString &name, const std::function<void()> &t)
