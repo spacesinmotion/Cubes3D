@@ -26,10 +26,12 @@ Cubes3D::Cubes3D(QWidget *parent)
   QSignalBlocker block(ui->cbAnimation);
   ui->cbAnimation->addItems({s.value("Main/RecentAnimation").toString()});
 
-  connect(new QShortcut(QKeySequence::Print, this), &QShortcut::activated, this, [this] { updateAnimation(); });
-
-  connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { selectAnimation(); });
+  connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { showCommands(); });
   connect(new QShortcut(Qt::Key_Escape, this), &QShortcut::activated, this, [this] { delete m_commandPanel; });
+
+  addAction("select animation", [this] { selectAnimation(); });
+  addAction("open recent file", [this] { openRecentFile(); });
+  addAction("update animation", [this] { updateAnimation(); });
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -218,31 +220,62 @@ void Cubes3D::updateAnimationList()
 
 void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)
 {
-  if (m_commandPanel)
-    delete m_commandPanel;
+  if (!m_commandPanel)
+    m_commandPanel = new QLineEdit(this);
 
-  auto *le = new QLineEdit(this);
-  m_commandPanel = le;
-
-  auto *c = new QCompleter(list, le);
+  auto *c = new QCompleter(list, m_commandPanel);
   c->setCaseSensitivity(Qt::CaseInsensitive);
-  connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, le, cb](const auto &t) {
-    delete le;
+  connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, cb](const auto &t) {
+    delete m_commandPanel;
     cb(t);
   });
-  le->setCompleter(c);
+  m_commandPanel->setCompleter(c);
 
   const auto w = width() / 2;
-  const auto h = le->sizeHint().height();
-  le->setGeometry(QRect(width() / 4, 0, w, h));
+  const auto h = m_commandPanel->sizeHint().height();
+  m_commandPanel->setGeometry(QRect(width() / 4, 0, w, h));
 
-  le->show();
-  le->setFocus();
-  c->complete(le->rect());
+  m_commandPanel->show();
+  m_commandPanel->setFocus();
+  c->complete(m_commandPanel->rect());
+}
+
+void getAllActions(const QList<QAction *> &actions, QHash<QString, QAction *> &a)
+{
+  for (auto *ac : actions)
+  {
+    if (auto *m = ac->menu())
+      getAllActions(m->actions(), a);
+    else if (!ac->isSeparator())
+      a[ac->text()] = ac;
+  }
+}
+
+void Cubes3D::showCommands()
+{
+  QHash<QString, QAction *> allActions;
+  getAllActions(ui->menuBar->actions(), allActions);
+  getAllActions(actions(), allActions);
+  showCommandPanel(allActions.keys(), [allActions](const auto &s) {
+    if (auto *a = allActions.value(s))
+      a->trigger();
+  });
 }
 
 void Cubes3D::selectAnimation()
 {
   showCommandPanel(ui->view3d->animations(),
                    [this](const auto &s) { ui->cbAnimation->setCurrentIndex(ui->cbAnimation->findText(s)); });
+}
+
+void Cubes3D::openRecentFile()
+{
+  showCommandPanel(QSettings().value("Main/RecentFiles").toStringList(), [this](const auto &s) { open_file(s); });
+}
+
+void Cubes3D::addAction(const QString &name, const std::function<void()> &t)
+{
+  auto *ac = new QAction(name, this);
+  connect(ac, &QAction::triggered, this, t);
+  QMainWindow::addAction(ac);
 }

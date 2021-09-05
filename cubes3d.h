@@ -42,7 +42,12 @@ private:
   void updateAnimationList();
 
   void showCommandPanel(const QStringList &, const std::function<void(const QString &)> &cb);
+
+  void showCommands();
   void selectAnimation();
+  void openRecentFile();
+
+  void addAction(const QString &name, const std::function<void()> &t);
 
 private:
   Ui::Cubes3D *ui;
