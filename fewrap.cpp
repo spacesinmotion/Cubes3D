@@ -18,7 +18,7 @@ extern "C"
 using slm::vec3;
 using RenderObjectPtr = std::unique_ptr<RenderObject>;
 
-using CustomPtr = std::variant<RenderObjectPtr, s_float, s_vec3, vec3, QColor, SceneHandler *>;
+using CustomPtr = std::variant<RenderObjectPtr, s_float, s_vec3, vec3, QColor, SceneHandler *, FeWrap *>;
 
 static char read_fn(fe_Context *, void *vit)
 {
@@ -66,6 +66,11 @@ template <typename T> static T get(fe_Context *ctx, fe_Object *o)
   }
 
   return std::get<T>(*reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)));
+}
+
+static FeWrap *_self(fe_Context *ctx)
+{
+  return get<FeWrap *>(ctx, fe_eval(ctx, fe_symbol(ctx, "self")));
 }
 
 static SceneHandler *_scene(fe_Context *ctx)
@@ -176,26 +181,6 @@ FeWrap::~FeWrap()
 {
   fe_close(m_fe);
   free(m_data);
-}
-
-void FeWrap::load(const QString &f)
-{
-  setlocale(LC_ALL, "C");
-  FILE *fp = fopen(f.toLocal8Bit(), "rb");
-  int gc = fe_savegc(m_fe);
-
-  for (;;)
-  {
-    fe_Object *obj = fe_readfp(m_fe, fp);
-    if (!obj)
-      break;
-
-    fe_eval(m_fe, obj);
-    fe_restoregc(m_fe, gc);
-  }
-
-  setlocale(LC_ALL, "");
-  fclose(fp);
 }
 
 QString FeWrap::eval(const QString &fe, SceneHandler &sh)
@@ -627,6 +612,8 @@ void FeWrap::init_fn(fe_Context *ctx)
   _func(acos);
   _func(atan);
   _func(atan);
+
+  fe_set(ctx, fe_symbol(ctx, "self"), custom(ctx, this));
 
   fe_set(ctx, fe_symbol(ctx, "vec3"), fe_cfunc(ctx, _vec3));
   fe_set(ctx, fe_symbol(ctx, "color"), fe_cfunc(ctx, _color));

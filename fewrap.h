@@ -1,6 +1,7 @@
 #ifndef FEWRAP_H
 #define FEWRAP_H
 
+#include <QHash>
 #include <QString>
 #include <functional>
 #include <memory>
@@ -17,8 +18,6 @@ class FeWrap
 public:
   FeWrap();
   ~FeWrap();
-
-  void load(const QString &f);
 
   QString eval(const QString &fe, SceneHandler &sh);
 
@@ -55,7 +54,7 @@ private:
   static fe_Object *_eval(fe_Context *ctx, const QString &);
   static fe_Object *_require(fe_Context *ctx, fe_Object *arg);
 
-  static void init_fn(fe_Context *ctx);
+  void init_fn(fe_Context *ctx);
 
 private:
   static const int m_size{1024 * 100};
