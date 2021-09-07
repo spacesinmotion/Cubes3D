@@ -18,6 +18,9 @@ Cubes3D::Cubes3D(QWidget *parent)
   , ui(new Ui::Cubes3D)
 {
   ui->setupUi(this);
+
+  m_feWrap = std::make_unique<FeWrap>(*ui->view3d);
+
   m_lineColumn = new QLabel{QString("0,0"), this};
   m_lineColumn->setFont(ui->teFeIn->font());
   statusBar()->addPermanentWidget(m_lineColumn);
@@ -124,7 +127,7 @@ bool Cubes3D::eval_text(const QString &t)
   ui->view3d->clear_scene();
   try
   {
-    const auto out = m_feWrap.eval(t, *ui->view3d);
+    const auto out = m_feWrap->eval(t);
     ui->teFeOut->setTextColor(Qt::black);
     ui->teFeOut->append(out);
   }
@@ -140,7 +143,7 @@ bool Cubes3D::eval_text(const QString &t)
   try
   {
     const auto p = ui->teFeIn->textCursor().position();
-    ui->teFeIn->setText(m_feWrap.format(t));
+    ui->teFeIn->setText(m_feWrap->format(t));
 
     auto c = ui->teFeIn->textCursor();
     c.movePosition(c.Right, c.MoveAnchor, p);
@@ -291,7 +294,7 @@ void Cubes3D::goToDefinition()
 
   QList<QPair<int, QString>> def;
   int maxLength = 0;
-  m_feWrap.eachDefinitionAtLine(fe, [&](int l, const auto &d) {
+  m_feWrap->eachDefinitionAtLine(fe, [&](int l, const auto &d) {
     def << qMakePair(l, d);
     maxLength = std::max(maxLength, d.size());
   });

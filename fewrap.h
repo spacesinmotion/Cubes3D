@@ -16,15 +16,17 @@ class SceneHandler;
 class FeWrap
 {
 public:
-  FeWrap();
+  explicit FeWrap(SceneHandler &s);
   ~FeWrap();
 
-  QString eval(const QString &fe, SceneHandler &sh);
+  QString eval(const QString &fe);
 
   QString format(const QString &fe);
 
   using LineDefinitionCB = std::function<void(int, const QString &)>;
   void eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb);
+
+  SceneHandler *scene() { return &m_scene; }
 
 private:
   static fe_Object *_mod(fe_Context *ctx, fe_Object *arg);
@@ -60,6 +62,8 @@ private:
   static const int m_size{1024 * 100};
   void *m_data{nullptr};
   fe_Context *m_fe{nullptr};
+
+  SceneHandler &m_scene;
 };
 
 #endif // FEWRAP_H

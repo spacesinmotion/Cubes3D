@@ -57,7 +57,7 @@ private:
   QLabel *m_lineColumn{nullptr};
 
   QString m_feFile;
-  FeWrap m_feWrap;
+  std::unique_ptr<FeWrap> m_feWrap;
 
   QVector<QPixmap> m_animation;
   int m_animationStep{0};

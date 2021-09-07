@@ -18,7 +18,7 @@ extern "C"
 using slm::vec3;
 using RenderObjectPtr = std::unique_ptr<RenderObject>;
 
-using CustomPtr = std::variant<RenderObjectPtr, s_float, s_vec3, vec3, QColor, SceneHandler *, FeWrap *>;
+using CustomPtr = std::variant<RenderObjectPtr, s_float, s_vec3, vec3, QColor, FeWrap *>;
 
 static char read_fn(fe_Context *, void *vit)
 {
@@ -68,14 +68,14 @@ template <typename T> static T get(fe_Context *ctx, fe_Object *o)
   return std::get<T>(*reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o)));
 }
 
-static FeWrap *_self(fe_Context *ctx)
+FeWrap *_self(fe_Context *ctx)
 {
   return get<FeWrap *>(ctx, fe_eval(ctx, fe_symbol(ctx, "self")));
 }
 
-static SceneHandler *_scene(fe_Context *ctx)
+SceneHandler *_scene(fe_Context *ctx)
 {
-  return get<SceneHandler *>(ctx, fe_eval(ctx, fe_symbol(ctx, "scene")));
+  return _self(ctx)->scene();
 }
 
 static std::vector<std::string> keys;
@@ -170,9 +170,10 @@ static RenderObjectPtr _uobj(fe_Context *ctx, fe_Object *o)
   return std::move(std::get<RenderObjectPtr>(*custom));
 }
 
-FeWrap::FeWrap()
+FeWrap::FeWrap(SceneHandler &s)
   : m_data{malloc(m_size)}
   , m_fe{fe_open(m_data, m_size)}
+  , m_scene{s}
 {
   init_fn(m_fe);
 }
@@ -183,16 +184,11 @@ FeWrap::~FeWrap()
   free(m_data);
 }
 
-QString FeWrap::eval(const QString &fe, SceneHandler &sh)
+QString FeWrap::eval(const QString &fe)
 {
   setlocale(LC_ALL, "C");
 
-  int gcx = fe_savegc(m_fe);
-  fe_set(m_fe, fe_symbol(m_fe, "scene"), custom(m_fe, &sh));
-
   const auto last_text = from_string(m_fe, _eval(m_fe, fe));
-
-  fe_restoregc(m_fe, gcx);
 
   setlocale(LC_ALL, "");
   return last_text;
