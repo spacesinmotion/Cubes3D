@@ -22,7 +22,6 @@ public:
   explicit Cubes3D(QWidget *parent = 0);
   ~Cubes3D();
 
-  bool eval_text(const QString &t);
   void open_file(const QString &t);
 
 private slots:
@@ -49,6 +48,8 @@ private:
   void goToDefinition();
 
   void addAction(const QString &name, const std::function<void()> &t);
+
+  void eval_main();
 
 private:
   Ui::Cubes3D *ui;

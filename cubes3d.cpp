@@ -92,14 +92,8 @@ void Cubes3D::open_file(const QString &f)
   QApplication::setOverrideCursor(Qt::WaitCursor);
   m_feFile = f;
 
-  QFile fi(f);
-  if (fi.open(QFile::ReadOnly))
-  {
-    QDir::setCurrent(QFileInfo(m_feFile).absolutePath());
-    const auto fe = fi.readAll();
-    ui->teFeIn->setText(fi.readAll());
-    eval_text(fe);
-  }
+  m_feWrap->newSession(m_feFile);
+  eval_main();
 
   QSettings s;
   auto recent = s.value("Main/RecentFiles").toStringList();
@@ -119,51 +113,13 @@ void Cubes3D::on_actionopen_triggered()
   open_file(f);
 }
 
-bool Cubes3D::eval_text(const QString &t)
-{
-  bool ok = true;
-
-  ui->teFeOut->clear();
-  ui->view3d->clear_scene();
-  try
-  {
-    const auto out = m_feWrap->eval(t);
-    ui->teFeOut->setTextColor(Qt::black);
-    ui->teFeOut->append(out);
-  }
-  catch (const std::exception &e)
-  {
-    ui->teFeOut->setTextColor(Qt::red);
-    ui->teFeOut->append(QString("ERROR: ") + e.what());
-    ok = false;
-  }
-
-  updateAnimationList();
-
-  try
-  {
-    const auto p = ui->teFeIn->textCursor().position();
-    ui->teFeIn->setText(m_feWrap->format(t));
-
-    auto c = ui->teFeIn->textCursor();
-    c.movePosition(c.Right, c.MoveAnchor, p);
-    ui->teFeIn->setTextCursor(c);
-  }
-  catch (const std::runtime_error &e)
-  {
-    ui->teFeOut->setTextColor(Qt::darkRed);
-    ui->teFeOut->append(QString("FORMAT_ERROR: ") + e.what());
-    ok = false;
-  }
-
-  return ok;
-}
-
 void Cubes3D::on_actionsave_triggered()
 {
   QApplication::setOverrideCursor(Qt::WaitCursor);
   const auto fe = ui->teFeIn->toPlainText();
-  if (eval_text(fe) && !m_feFile.isEmpty())
+  m_feWrap->setCodeOf(QFileInfo(m_feFile).fileName(), fe);
+  eval_main();
+  if (!m_feFile.isEmpty())
   {
     QFile f(m_feFile);
     if (f.open(QFile::WriteOnly))
@@ -322,4 +278,39 @@ void Cubes3D::addAction(const QString &name, const std::function<void()> &t)
   auto *ac = new QAction(name, this);
   connect(ac, &QAction::triggered, this, t);
   QMainWindow::addAction(ac);
+}
+
+void Cubes3D::eval_main()
+{
+  ui->teFeOut->clear();
+  ui->view3d->clear_scene();
+  try
+  {
+    const auto out = m_feWrap->eval();
+    ui->teFeOut->setTextColor(Qt::black);
+    ui->teFeOut->append(out);
+  }
+  catch (const std::exception &e)
+  {
+    ui->teFeOut->setTextColor(Qt::red);
+    ui->teFeOut->append(QString("ERROR: ") + e.what());
+    return;
+  }
+
+  updateAnimationList();
+
+  try
+  {
+    const auto p = ui->teFeIn->textCursor().position();
+    ui->teFeIn->setText(m_feWrap->format(m_feWrap->codeOf(QFileInfo(m_feFile).fileName())));
+
+    auto c = ui->teFeIn->textCursor();
+    c.movePosition(c.Right, c.MoveAnchor, p);
+    ui->teFeIn->setTextCursor(c);
+  }
+  catch (const std::runtime_error &e)
+  {
+    ui->teFeOut->setTextColor(Qt::darkRed);
+    ui->teFeOut->append(QString("FORMAT_ERROR: ") + e.what());
+  }
 }

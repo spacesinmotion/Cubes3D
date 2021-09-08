@@ -19,7 +19,12 @@ public:
   explicit FeWrap(SceneHandler &s);
   ~FeWrap();
 
-  QString eval(const QString &fe);
+  void newSession(const QString &f);
+  QString eval();
+
+public:
+  QString codeOf(const QString &f);
+  void setCodeOf(const QString &f, const QString &c);
 
   QString format(const QString &fe);
 
@@ -64,6 +69,9 @@ private:
   fe_Context *m_fe{nullptr};
 
   SceneHandler &m_scene;
+
+  QString m_mainFile;
+  QHash<QString, QString> m_fileContents;
 };
 
 #endif // FEWRAP_H

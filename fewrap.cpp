@@ -184,14 +184,40 @@ FeWrap::~FeWrap()
   free(m_data);
 }
 
-QString FeWrap::eval(const QString &fe)
+void FeWrap::newSession(const QString &f)
+{
+  m_mainFile = QFileInfo(f).fileName();
+  m_fileContents.clear();
+  QDir::setCurrent(QFileInfo(f).absolutePath());
+}
+
+QString FeWrap::eval()
 {
   setlocale(LC_ALL, "C");
+  auto gc = fe_savegc(m_fe);
 
-  const auto last_text = from_string(m_fe, _eval(m_fe, fe));
+  const auto last_text = from_string(m_fe, _eval(m_fe, codeOf(m_mainFile)));
 
+  fe_restoregc(m_fe, gc);
   setlocale(LC_ALL, "");
   return last_text;
+}
+
+QString FeWrap::codeOf(const QString &f)
+{
+  if (!m_fileContents.contains(f))
+  {
+    QFile fi(f);
+    if (!fi.open(QFile::ReadOnly))
+      fe_error(m_fe, ("can't open file '" + f + "'").toLocal8Bit());
+    m_fileContents[f] = QString(fi.readAll());
+  }
+  return m_fileContents.value(f);
+}
+
+void FeWrap::setCodeOf(const QString &f, const QString &c)
+{
+  m_fileContents[f] = QString(c);
 }
 
 static bool format_need_break(fe_Context *ctx, fe_Object *o)
@@ -552,12 +578,7 @@ fe_Object *FeWrap::_eval(fe_Context *ctx, const QString &fe)
 fe_Object *FeWrap::_require(fe_Context *ctx, fe_Object *arg)
 {
   const auto f = from_string(ctx, fe_nextarg(ctx, &arg)).replace(".", QDir::separator()).append(".fe");
-
-  QFile fi(f);
-  if (!fi.open(QFile::ReadOnly))
-    fe_error(ctx, "Did not found file!");
-
-  return _eval(ctx, fi.readAll());
+  return _eval(ctx, _self(ctx)->codeOf(f));
 }
 
 [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
