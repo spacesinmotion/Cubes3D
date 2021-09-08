@@ -19,10 +19,9 @@ public:
   explicit FeWrap(SceneHandler &s);
   ~FeWrap();
 
-  void newSession(const QString &f);
+  QString newSession(const QString &f);
   QString eval();
 
-public:
   QString codeOf(const QString &f);
   void setCodeOf(const QString &f, const QString &c);
 

@@ -90,9 +90,10 @@ void Cubes3D::timerEvent(QTimerEvent *t)
 void Cubes3D::open_file(const QString &f)
 {
   QApplication::setOverrideCursor(Qt::WaitCursor);
-  m_feFile = f;
 
-  m_feWrap->newSession(m_feFile);
+  m_feFile = f;
+  m_editFile = m_feWrap->newSession(m_feFile);
+
   eval_main();
 
   QSettings s;
@@ -116,15 +117,17 @@ void Cubes3D::on_actionopen_triggered()
 void Cubes3D::on_actionsave_triggered()
 {
   QApplication::setOverrideCursor(Qt::WaitCursor);
-  const auto fe = ui->teFeIn->toPlainText();
-  m_feWrap->setCodeOf(QFileInfo(m_feFile).fileName(), fe);
+
+  m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
   eval_main();
+
   if (!m_feFile.isEmpty())
   {
-    QFile f(m_feFile);
+    QFile f(m_editFile);
     if (f.open(QFile::WriteOnly))
-      f.write(fe.toLocal8Bit());
+      f.write(ui->teFeIn->toPlainText().toLocal8Bit());
   }
+
   QApplication::restoreOverrideCursor();
 }
 
@@ -286,9 +289,8 @@ void Cubes3D::eval_main()
   ui->view3d->clear_scene();
   try
   {
-    const auto out = m_feWrap->eval();
     ui->teFeOut->setTextColor(Qt::black);
-    ui->teFeOut->append(out);
+    ui->teFeOut->append(m_feWrap->eval());
   }
   catch (const std::exception &e)
   {
@@ -302,7 +304,7 @@ void Cubes3D::eval_main()
   try
   {
     const auto p = ui->teFeIn->textCursor().position();
-    ui->teFeIn->setText(m_feWrap->format(m_feWrap->codeOf(QFileInfo(m_feFile).fileName())));
+    ui->teFeIn->setText(m_feWrap->format(m_feWrap->codeOf(m_editFile)));
 
     auto c = ui->teFeIn->textCursor();
     c.movePosition(c.Right, c.MoveAnchor, p);

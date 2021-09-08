@@ -184,11 +184,12 @@ FeWrap::~FeWrap()
   free(m_data);
 }
 
-void FeWrap::newSession(const QString &f)
+QString FeWrap::newSession(const QString &f)
 {
   m_mainFile = QFileInfo(f).fileName();
   m_fileContents.clear();
   QDir::setCurrent(QFileInfo(f).absolutePath());
+  return m_mainFile;
 }
 
 QString FeWrap::eval()
