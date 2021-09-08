@@ -368,6 +368,11 @@ void FeWrap::eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb)
   }
 }
 
+QStringList FeWrap::usedFiles() const
+{
+  return m_fileContents.keys();
+}
+
 fe_Object *FeWrap::_mod(fe_Context *ctx, fe_Object *arg)
 {
   auto a = fe_tonumber(ctx, fe_nextarg(ctx, &arg));

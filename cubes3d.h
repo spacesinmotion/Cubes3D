@@ -46,6 +46,7 @@ private:
   void selectAnimation();
   void openRecentFile();
   void goToDefinition();
+  void goToFile();
 
   void addAction(const QString &name, const std::function<void()> &t);
 

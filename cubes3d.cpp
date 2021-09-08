@@ -42,6 +42,7 @@ Cubes3D::Cubes3D(QWidget *parent)
   addAction("open recent file", [this] { openRecentFile(); });
   addAction("update animation", [this] { updateAnimation(); });
   addAction("go to definition", [this] { goToDefinition(); });
+  addAction("go to file", [this] { goToFile(); });
 
   connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { showCommands(); });
   connect(new QShortcut(Qt::Key_Escape, this), &QShortcut::activated, this, [this] {
@@ -273,6 +274,14 @@ void Cubes3D::goToDefinition()
       c.movePosition(c.Down);
     ui->teFeIn->setTextCursor(c);
     ui->teFeIn->setFocus();
+  });
+}
+
+void Cubes3D::goToFile()
+{
+  showCommandPanel(m_feWrap->usedFiles(), [this](const auto &s) {
+    m_editFile = s;
+    ui->teFeIn->setPlainText(m_feWrap->codeOf(m_editFile));
   });
 }
 
