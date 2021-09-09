@@ -368,6 +368,16 @@ void FeWrap::eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb)
   }
 }
 
+void FeWrap::saveFiles()
+{
+  for (auto it = m_fileContents.begin(); it != m_fileContents.end(); ++it)
+  {
+    QFile f(it.key());
+    if (f.open(QFile::WriteOnly))
+      f.write(it.value().toLocal8Bit());
+  }
+}
+
 QStringList FeWrap::usedFiles() const
 {
   return m_fileContents.keys();

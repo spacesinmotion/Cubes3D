@@ -3,7 +3,7 @@
 (= ccc
   (require "base.colors"))
 
-(= lp (vec3 0.4 -2 5))
+(= lp (vec3 0.4 -3 5))
 
 (= body (fn (a)
   (translate a

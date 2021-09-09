@@ -50,6 +50,7 @@ private:
   void goToDefinition();
   void goToFile();
 
+  void addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t);
   void addAction(const QString &name, const std::function<void()> &t);
 
   void eval_main();

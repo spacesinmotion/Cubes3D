@@ -41,17 +41,14 @@ Cubes3D::Cubes3D(QWidget *parent)
   addAction("select animation", [this] { selectAnimation(); });
   addAction("open recent file", [this] { openRecentFile(); });
   addAction("update animation", [this] { updateAnimation(); });
-  addAction("go to definition", [this] { goToDefinition(); });
-  addAction("go to file", [this] { goToFile(); });
+  addAction("go to definition", Qt::ControlModifier + Qt::Key_M, [this] { goToDefinition(); });
+  addAction("go to file", Qt::ControlModifier + Qt::Key_Tab, [this] { goToFile(); });
 
-  connect(new QShortcut(Qt::Key_F1, this), &QShortcut::activated, this, [this] { showCommands(); });
-  connect(new QShortcut(Qt::Key_Escape, this), &QShortcut::activated, this, [this] {
+  new QShortcut(Qt::Key_F1, this, [this] { showCommands(); });
+  new QShortcut(Qt::Key_Escape, this, [this] {
     delete m_commandPanel;
     ui->teFeIn->setFocus();
   });
-  connect(new QShortcut(Qt::ControlModifier + Qt::Key_M, this), &QShortcut::activated, this,
-          [this] { goToDefinition(); });
-  connect(new QShortcut(Qt::ControlModifier + Qt::Key_Tab, this), &QShortcut::activated, this, [this] { goToFile(); });
 
   connect(ui->teFeIn->document(), &QTextDocument::contentsChanged, this, [this] { setEditFile(m_editFile); });
 
@@ -128,16 +125,9 @@ void Cubes3D::on_actionsave_triggered()
   m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
   eval_main();
 
-  if (!m_feFile.isEmpty())
-  {
-    QFile f(m_editFile);
-    if (f.open(QFile::WriteOnly))
-    {
-      f.write(ui->teFeIn->toPlainText().toLocal8Bit());
-      ui->teFeIn->document()->setModified(false);
-      setEditFile(m_editFile);
-    }
-  }
+  m_feWrap->saveFiles();
+  ui->teFeIn->document()->setModified(false);
+  setEditFile(m_editFile);
 
   QApplication::restoreOverrideCursor();
 }
@@ -299,17 +289,26 @@ void Cubes3D::goToDefinition()
 void Cubes3D::goToFile()
 {
   showCommandPanel(m_feWrap->usedFiles(), [this](const auto &s) {
+    m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
+    ui->teFeIn->setText(m_feWrap->codeOf(s));
+
     setEditFile(s);
-    ui->teFeIn->setText(m_feWrap->codeOf(m_editFile));
     ui->teFeIn->setFocus();
   });
 }
 
-void Cubes3D::addAction(const QString &name, const std::function<void()> &t)
+void Cubes3D::addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t)
 {
   auto *ac = new QAction(name, this);
   connect(ac, &QAction::triggered, this, t);
   QMainWindow::addAction(ac);
+  if (!ks.isEmpty())
+    new QShortcut(ks, this, t);
+}
+
+void Cubes3D::addAction(const QString &name, const std::function<void()> &t)
+{
+  addAction(name, {}, t);
 }
 
 void Cubes3D::eval_main()

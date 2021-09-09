@@ -30,6 +30,8 @@ public:
   using LineDefinitionCB = std::function<void(int, const QString &)>;
   void eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb);
 
+  void saveFiles();
+
   QStringList usedFiles() const;
 
   SceneHandler *scene() { return &m_scene; }
