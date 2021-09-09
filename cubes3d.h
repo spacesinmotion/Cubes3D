@@ -40,6 +40,8 @@ private:
   void updateAnimation();
   void updateAnimationList();
 
+  void setEditFile(const QString &f);
+
   void showCommandPanel(const QStringList &, const std::function<void(const QString &)> &cb);
 
   void showCommands();

@@ -51,6 +51,9 @@ Cubes3D::Cubes3D(QWidget *parent)
   });
   connect(new QShortcut(Qt::ControlModifier + Qt::Key_M, this), &QShortcut::activated, this,
           [this] { goToDefinition(); });
+  connect(new QShortcut(Qt::ControlModifier + Qt::Key_Tab, this), &QShortcut::activated, this, [this] { goToFile(); });
+
+  connect(ui->teFeIn->document(), &QTextDocument::contentsChanged, this, [this] { setEditFile(m_editFile); });
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -93,9 +96,12 @@ void Cubes3D::open_file(const QString &f)
   QApplication::setOverrideCursor(Qt::WaitCursor);
 
   m_feFile = f;
-  m_editFile = m_feWrap->newSession(m_feFile);
 
+  setEditFile(m_feWrap->newSession(m_feFile));
   eval_main();
+
+  ui->teFeIn->document()->setModified(false);
+  setEditFile(m_editFile);
 
   QSettings s;
   auto recent = s.value("Main/RecentFiles").toStringList();
@@ -126,7 +132,11 @@ void Cubes3D::on_actionsave_triggered()
   {
     QFile f(m_editFile);
     if (f.open(QFile::WriteOnly))
+    {
       f.write(ui->teFeIn->toPlainText().toLocal8Bit());
+      ui->teFeIn->document()->setModified(false);
+      setEditFile(m_editFile);
+    }
   }
 
   QApplication::restoreOverrideCursor();
@@ -187,6 +197,15 @@ void Cubes3D::updateAnimationList()
   ui->cbAnimation->addItems(ui->view3d->animations());
   ui->cbAnimation->setCurrentIndex(std::max(0, ui->cbAnimation->findText(last)));
   on_cbAnimation_currentIndexChanged(ui->cbAnimation->currentText());
+}
+
+void Cubes3D::setEditFile(const QString &f)
+{
+  m_editFile = f;
+  ui->teFeIn->document()->isModified();
+
+  setWindowTitle(QApplication::applicationName() +
+                 QString(" (%1%2)").arg(m_editFile).arg(ui->teFeIn->document()->isModified() ? "*" : ""));
 }
 
 void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)
@@ -280,8 +299,9 @@ void Cubes3D::goToDefinition()
 void Cubes3D::goToFile()
 {
   showCommandPanel(m_feWrap->usedFiles(), [this](const auto &s) {
-    m_editFile = s;
-    ui->teFeIn->setPlainText(m_feWrap->codeOf(m_editFile));
+    setEditFile(s);
+    ui->teFeIn->setText(m_feWrap->codeOf(m_editFile));
+    ui->teFeIn->setFocus();
   });
 }
 
