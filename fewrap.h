@@ -31,6 +31,7 @@ public:
   void eachDefinitionAtLine(const QString &fe, const LineDefinitionCB &cb);
 
   void saveFiles();
+  bool hasChanges() const { return m_hasChanges; }
 
   QStringList usedFiles() const;
 
@@ -75,6 +76,7 @@ private:
 
   QString m_mainFile;
   QHash<QString, QString> m_fileContents;
+  bool m_hasChanges{false};
 };
 
 #endif // FEWRAP_H

@@ -192,10 +192,8 @@ void Cubes3D::updateAnimationList()
 void Cubes3D::setEditFile(const QString &f)
 {
   m_editFile = f;
-  ui->teFeIn->document()->isModified();
-
-  setWindowTitle(QApplication::applicationName() +
-                 QString(" (%1%2)").arg(m_editFile).arg(ui->teFeIn->document()->isModified() ? "*" : ""));
+  const auto changed = m_feWrap->hasChanges() || ui->teFeIn->document()->isModified();
+  setWindowTitle(QApplication::applicationName() + QString("%2 (%1)").arg(m_editFile).arg(changed ? "*" : ""));
 }
 
 void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)

@@ -186,6 +186,7 @@ FeWrap::~FeWrap()
 
 QString FeWrap::newSession(const QString &f)
 {
+  m_hasChanges = false;
   m_mainFile = QFileInfo(f).fileName();
   m_fileContents.clear();
   QDir::setCurrent(QFileInfo(f).absolutePath());
@@ -219,6 +220,7 @@ QString FeWrap::codeOf(const QString &f)
 void FeWrap::setCodeOf(const QString &f, const QString &c)
 {
   m_fileContents[f] = QString(c);
+  m_hasChanges = true;
 }
 
 static bool format_need_break(fe_Context *ctx, fe_Object *o)
@@ -376,6 +378,7 @@ void FeWrap::saveFiles()
     if (f.open(QFile::WriteOnly))
       f.write(it.value().toLocal8Bit());
   }
+  m_hasChanges = false;
 }
 
 QStringList FeWrap::usedFiles() const
