@@ -49,6 +49,7 @@ private:
   void openRecentFile();
   void goToDefinition();
   void goToFile();
+  void exportSpriteMap();
 
   void addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t);
   void addAction(const QString &name, const std::function<void()> &t);
@@ -67,6 +68,7 @@ private:
 
   QVector<QPixmap> m_animation;
   int m_animationStep{0};
+  bool m_animationHelper{true};
 
   static const int w = 24, h = 48, s = 3;
 };

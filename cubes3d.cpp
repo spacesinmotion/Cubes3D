@@ -43,6 +43,7 @@ Cubes3D::Cubes3D(QWidget *parent)
   addAction("update animation", [this] { updateAnimation(); });
   addAction("go to definition", Qt::ControlModifier + Qt::Key_M, [this] { goToDefinition(); });
   addAction("go to file", Qt::ControlModifier + Qt::Key_Tab, [this] { goToFile(); });
+  addAction("export sprite map", [this] { exportSpriteMap(); });
 
   new QShortcut(Qt::Key_F1, this, [this] { showCommands(); });
   new QShortcut(Qt::Key_Escape, this, [this] {
@@ -164,18 +165,21 @@ void Cubes3D::on_cbAnimation_currentIndexChanged(const QString &name)
 void Cubes3D::updateAnimation()
 {
   m_animation = ui->view3d->allFrames(w, h);
-  int i = 0;
-  for (auto &f : m_animation)
+  if (m_animationHelper)
   {
-    QPainter p(&f);
-    p.drawLine(0, 0, int(i / double(m_animation.size()) * w), 0);
-    p.drawPoint(w - 1, h - 1);
-    p.drawPoint(0, h - 1);
-    p.drawPoint(w - 1, 0);
-    p.setPen(Qt::lightGray);
-    p.drawPoint(0, h / 2);
-    p.drawPoint(w - 1, h / 2);
-    ++i;
+    int i = 0;
+    for (auto &f : m_animation)
+    {
+      QPainter p(&f);
+      p.drawLine(0, 0, int(i / double(m_animation.size()) * w), 0);
+      p.drawPoint(w - 1, h - 1);
+      p.drawPoint(0, h - 1);
+      p.drawPoint(w - 1, 0);
+      p.setPen(Qt::lightGray);
+      p.drawPoint(0, h / 2);
+      p.drawPoint(w - 1, h / 2);
+      ++i;
+    }
   }
 }
 
@@ -293,6 +297,51 @@ void Cubes3D::goToFile()
     setEditFile(s);
     ui->teFeIn->setFocus();
   });
+}
+
+void Cubes3D::exportSpriteMap()
+{
+  const auto currentAnimation = ui->cbAnimation->currentIndex();
+  m_animationHelper = false;
+  if (currentAnimation == 0)
+    updateAnimation();
+
+  QVector<QVector<QPixmap>> allAnimations;
+  for (int i = 0; i < ui->cbAnimation->count(); ++i)
+  {
+    ui->cbAnimation->setCurrentIndex(i);
+    allAnimations << m_animation;
+  }
+  m_animationHelper = true;
+  ui->cbAnimation->setCurrentIndex(currentAnimation);
+
+  QSize s(0, 0);
+  for (const auto &a : allAnimations)
+  {
+    s.setHeight(s.height() + a.front().height());
+    s.setWidth(std::max(s.width(), a.size() * a.front().width()));
+  }
+
+  QPixmap all(s);
+  all.fill(Qt::transparent);
+  QPainter p(&all);
+
+  QPoint tl(0, 0);
+  for (const auto &a : allAnimations)
+  {
+    for (const auto &f : a)
+    {
+      p.drawPixmap(tl, f);
+      tl.rx() += f.width();
+    }
+    tl.rx() = 0;
+    tl.ry() += a.front().height();
+  }
+
+  auto *l = new QLabel;
+  l->setAttribute(Qt::WA_DeleteOnClose);
+  l->setPixmap(all);
+  l->show();
 }
 
 void Cubes3D::addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t)
