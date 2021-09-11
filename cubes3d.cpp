@@ -9,12 +9,34 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QKeyEvent>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QPainter>
 #include <QSettings>
 #include <QShortcut>
 #include <QStatusBar>
 #include <QTimer>
+
+class CompleterEdit : public QLineEdit
+{
+public:
+  using QLineEdit::QLineEdit;
+
+  void keyPressEvent(QKeyEvent *ke) final
+  {
+    if (ke->key() == Qt::Key_Enter || ke->key() == Qt::Key_Return)
+    {
+      if (!completer()->popup()->currentIndex().isValid())
+      {
+        completer()->popup()->setCurrentIndex(completer()->completionModel()->index(0, 0));
+        completer()->setCurrentRow(0);
+        emit completer()->activated(text());
+      }
+    }
+    return QLineEdit::keyPressEvent(ke);
+  }
+};
 
 Cubes3D::Cubes3D(QWidget *parent)
   : QMainWindow(parent)
@@ -50,7 +72,11 @@ Cubes3D::Cubes3D(QWidget *parent)
 
   new QShortcut(Qt::Key_F1, this, [this] { showCommands(); });
   new QShortcut(Qt::Key_Escape, this, [this] {
-    delete m_commandPanel;
+    if (m_commandPanel)
+    {
+      m_commandPanel->deleteLater();
+      m_commandPanel = nullptr;
+    }
     ui->teFeIn->setFocus();
   });
 
@@ -236,20 +262,22 @@ void Cubes3D::setEditFile(const QString &f)
 
 void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)
 {
-  if (!m_commandPanel)
-  {
-    m_commandPanel = new QLineEdit(this);
-    m_commandPanel->setFont(ui->teFeIn->font());
+  if (m_commandPanel)
+    return;
 
-    auto *c = new QCompleter(list, m_commandPanel);
-    c->setCaseSensitivity(Qt::CaseInsensitive);
-    c->popup()->setFont(ui->teFeIn->font());
-    connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, cb](const auto &t) {
-      delete m_commandPanel;
-      cb(t);
-    });
-    m_commandPanel->setCompleter(c);
-  }
+  m_commandPanel = new CompleterEdit(this);
+  m_commandPanel->setFont(ui->teFeIn->font());
+
+  auto *c = new QCompleter(list, m_commandPanel);
+  c->setCaseSensitivity(Qt::CaseInsensitive);
+  c->setFilterMode(Qt::MatchContains);
+  c->popup()->setFont(ui->teFeIn->font());
+  connect(c, qOverload<const QString &>(&QCompleter::activated), this, [this, cb](const auto &t) {
+    m_commandPanel->deleteLater();
+    m_commandPanel = nullptr;
+    cb(t);
+  });
+  m_commandPanel->setCompleter(c);
 
   const auto w = width() / 2;
   const auto h = m_commandPanel->sizeHint().height();
@@ -279,6 +307,8 @@ void Cubes3D::showCommands()
   showCommandPanel(allActions.keys(), [allActions](const auto &s) {
     if (auto *a = allActions.value(s))
       a->trigger();
+    else
+      qDebug() << "no command" << s;
   });
 }
 
@@ -324,6 +354,17 @@ void Cubes3D::goToDefinition()
 
 void Cubes3D::goToFile(const QString &s)
 {
+  if (!m_feWrap->codeExists(s))
+  {
+    if (QMessageBox::Yes !=
+        QMessageBox::question(this, QApplication::applicationName(),
+                              QString("<b>'%1'</b> does not exist!<br/>Want you create it?").arg(s)))
+
+      return;
+
+    m_feWrap->setCodeOf(s, QString("(= %1 (fn ()))").arg(QFileInfo(s).baseName()));
+  }
+
   m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
   ui->teFeIn->setText(m_feWrap->codeOf(s));
 

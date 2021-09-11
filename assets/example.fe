@@ -1,5 +1,7 @@
 (require "colors")
 
+(require "base.fancy")
+
 (= ccc
   (require "base.colors"))
 
