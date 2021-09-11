@@ -6,6 +6,9 @@
 #include <QClipboard>
 #include <QCompleter>
 #include <QFileDialog>
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QLineEdit>
 #include <QPainter>
 #include <QSettings>
@@ -327,21 +330,49 @@ void Cubes3D::exportSpriteMap()
   QPainter p(&all);
 
   QPoint tl(0, 0);
+  QJsonArray jsonAnimations;
+  int index = 0;
   for (const auto &a : allAnimations)
   {
+    QJsonArray jsonSprites;
+
     for (const auto &f : a)
     {
       p.drawPixmap(tl, f);
+
+      jsonSprites.append(QJsonObject{
+          {"x", tl.x()},
+          {"y", tl.y()},
+          {"w", f.width()},
+          {"h", f.height()},
+      });
       tl.rx() += f.width();
     }
     tl.rx() = 0;
     tl.ry() += a.front().height();
+
+    jsonAnimations.append(QJsonObject{
+        {"name", ui->cbAnimation->itemText(index++)},
+        {"sprites", jsonSprites},
+    });
   }
 
   auto *l = new QLabel;
   l->setAttribute(Qt::WA_DeleteOnClose);
   l->setPixmap(all);
   l->show();
+
+  const auto baseName = QFileInfo(m_feFile).baseName();
+  const auto d = QFileInfo(m_feFile).dir();
+  all.save(d.absoluteFilePath(baseName + ".png"));
+
+  QFile jsonFile(d.absoluteFilePath(baseName + ".json"));
+  jsonFile.open(QFile::WriteOnly);
+  jsonFile.write(QJsonDocument(QJsonObject{
+                                   {"file", baseName + ".png"},
+                                   {"animations", jsonAnimations},
+                               })
+                     .toJson(QJsonDocument::Indented));
 }
 
 void Cubes3D::addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t)
