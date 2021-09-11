@@ -167,6 +167,7 @@ void FeEdit::insertCompletion(const QString &completion)
   tc.insertText(completion);
   tc.setPosition(p + 1);
   setTextCursor(tc);
+  cursorToNextInList();
 }
 
 QTextCursor FeEdit::textUnderCursor() const
