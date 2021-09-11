@@ -55,6 +55,7 @@ Cubes3D::Cubes3D(QWidget *parent)
   });
 
   connect(ui->teFeIn->document(), &QTextDocument::contentsChanged, this, [this] { setEditFile(m_editFile); });
+  connect(ui->teFeIn, &FeEdit::requestGoToFile, this, [this](const auto &s) { goToFile(s); });
 
   QTimer::singleShot(10, this, [this] {
     QSettings s;
@@ -73,6 +74,8 @@ Cubes3D::~Cubes3D()
 
 void Cubes3D::closeEvent(QCloseEvent *e)
 {
+  on_actionsave_triggered();
+
   QSettings s;
   s.setValue("Main/geomtry", saveGeometry());
   s.setValue("Main/state", saveState());
@@ -157,6 +160,11 @@ void Cubes3D::on_actionsave_triggered()
   setEditFile(m_editFile);
 
   QApplication::restoreOverrideCursor();
+}
+
+void Cubes3D::on_actionquit_triggered()
+{
+  close();
 }
 
 void Cubes3D::on_menuRecent_aboutToShow()
@@ -314,15 +322,18 @@ void Cubes3D::goToDefinition()
   });
 }
 
+void Cubes3D::goToFile(const QString &s)
+{
+  m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
+  ui->teFeIn->setText(m_feWrap->codeOf(s));
+
+  setEditFile(s);
+  ui->teFeIn->setFocus();
+}
+
 void Cubes3D::goToFile()
 {
-  showCommandPanel(m_feWrap->usedFiles(), [this](const auto &s) {
-    m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
-    ui->teFeIn->setText(m_feWrap->codeOf(s));
-
-    setEditFile(s);
-    ui->teFeIn->setFocus();
-  });
+  showCommandPanel(m_feWrap->usedFiles(), [this](const auto &s) { goToFile(s); });
 }
 
 void Cubes3D::exportSpriteMap()

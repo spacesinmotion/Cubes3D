@@ -205,6 +205,11 @@ QString FeWrap::eval()
   return last_text;
 }
 
+bool FeWrap::codeExists(const QString &f) const
+{
+  return m_fileContents.contains(f);
+}
+
 QString FeWrap::codeOf(const QString &f)
 {
   if (!m_fileContents.contains(f))

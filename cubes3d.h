@@ -28,6 +28,7 @@ private slots:
   void on_actionnew_triggered();
   void on_actionopen_triggered();
   void on_actionsave_triggered();
+  void on_actionquit_triggered();
 
   void on_menuRecent_aboutToShow();
   void on_actionclearRecent_triggered();
@@ -49,6 +50,7 @@ private:
   void selectAnimation();
   void openRecentFile();
   void goToDefinition();
+  void goToFile(const QString &f);
   void goToFile();
   void exportSpriteMap();
 

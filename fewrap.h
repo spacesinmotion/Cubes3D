@@ -22,6 +22,7 @@ public:
   QString newSession(const QString &f);
   QString eval();
 
+  bool codeExists(const QString &f) const;
   QString codeOf(const QString &f);
   void setCodeOf(const QString &f, const QString &c);
 

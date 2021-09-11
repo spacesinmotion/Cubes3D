@@ -123,6 +123,7 @@
     <addaction name="separator"/>
     <addaction name="actionsave"/>
     <addaction name="separator"/>
+    <addaction name="actionquit"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
@@ -141,7 +142,7 @@
   </action>
   <action name="actionclearRecent">
    <property name="text">
-    <string>clear</string>
+    <string>clear recent</string>
    </property>
   </action>
   <action name="actionnew">
@@ -150,6 +151,11 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+N</string>
+   </property>
+  </action>
+  <action name="actionquit">
+   <property name="text">
+    <string>quit</string>
    </property>
   </action>
  </widget>

@@ -9,6 +9,7 @@
 #include <QColorDialog>
 #include <QCompleter>
 #include <QDebug>
+#include <QDir>
 #include <QKeyEvent>
 #include <QScrollBar>
 #include <QShortcut>
@@ -135,6 +136,7 @@ void FeEdit::keyPressEvent(QKeyEvent *ke)
       match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_Home, [this] { cursorToListStart(true); }) ||
       match(Qt::AltModifier, Qt::Key_End, [this] { cursorToListEnd(); }) ||
       match(Qt::AltModifier | Qt::ShiftModifier, Qt::Key_End, [this] { cursorToListEnd(true); }) ||
+      match(Qt::NoModifier, Qt::Key_F2, [this] { goToDefinition(); }) ||
       match(Qt::ControlModifier, Qt::Key_D, [this] { duplicateSelection(); }))
     return;
 
@@ -390,4 +392,20 @@ void FeEdit::cursorToListEnd(bool select)
   c = to_outer_end(c, select);
   c.movePosition(c.Left, select ? c.KeepAnchor : c.MoveAnchor);
   setTextCursor(c);
+}
+
+void FeEdit::goToDefinition()
+{
+  const auto backUp = textCursor();
+
+  cursorToOuterList(true);
+  auto selection = textCursor().selectedText();
+  setTextCursor(backUp);
+
+  if (selection.startsWith("(require "))
+  {
+    auto s = selection.replace("(", "").replace(")", "").split(' ', Qt::SkipEmptyParts);
+    if (s.size() >= 2)
+      emit requestGoToFile(s[1].replace("\"", "").replace(".", QDir::separator()).trimmed() + ".fe");
+  }
 }
