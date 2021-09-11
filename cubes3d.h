@@ -25,6 +25,7 @@ public:
   void open_file(const QString &t);
 
 private slots:
+  void on_actionnew_triggered();
   void on_actionopen_triggered();
   void on_actionsave_triggered();
 

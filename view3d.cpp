@@ -4,6 +4,7 @@
 
 #include <QApplication>
 #include <QDebug>
+#include <QDir>
 #include <QFileInfo>
 #include <QMouseEvent>
 #include <QOffscreenSurface>
@@ -123,9 +124,10 @@ SharedDisplayObject View3D::loadObject(const QString &path)
 
 SharedDisplayObject View3D::cube()
 {
-  if (QFileInfo("assets/cube.ply").isFile())
+  const auto d = QFileInfo(QApplication::applicationFilePath()).absoluteDir();
+  if (QFileInfo(d.filePath("assets/cube.ply")).isFile())
     return loadObject("assets/cube.ply");
-  return loadObject("../assets/cube.ply");
+  return loadObject(d.filePath("../assets/cube.ply"));
 }
 
 void View3D::clear_scene()

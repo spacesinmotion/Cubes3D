@@ -113,6 +113,29 @@ void Cubes3D::open_file(const QString &f)
   QApplication::restoreOverrideCursor();
 }
 
+void Cubes3D::on_actionnew_triggered()
+{
+  auto f = QFileDialog::getSaveFileName(this, tr("New scene file"), m_feFile, tr("Scene (*.fe)"));
+  if (f.isEmpty())
+    return;
+
+  {
+    QFile fe(f);
+    fe.open(QFile::WriteOnly);
+    fe.write(R"(
+(= lp (vec3 0.4 -3 5))
+
+(= cubian (fn ()
+  (rotateZ (fn (t) (deg t))
+    (cube (vec3 0.25) (color 200 200 200)))))
+    
+(animation "guy_front" 1 lp
+  (cubian)))");
+  }
+
+  open_file(f);
+}
+
 void Cubes3D::on_actionopen_triggered()
 {
   auto f = QFileDialog::getOpenFileName(this, tr("Open scene file"), m_feFile, tr("Scene (*.fe)"));
