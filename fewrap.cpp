@@ -34,6 +34,8 @@ static void write_fn(fe_Context *, void *udata, char c)
 
 static QString from_string(fe_Context *ctx, fe_Object *o)
 {
+  if (!o)
+    return QStringLiteral("nil");
   QString t;
   fe_write(ctx, o, write_fn, &t, false);
   return t;
@@ -273,9 +275,14 @@ static void format__(fe_Context *ctx, fe_Object *o, QString &out, bool force_no_
 
   if (fe_type(ctx, o) != FE_TPAIR)
   {
-    const auto q = fe_type(ctx, o) == FE_TSTRING ? "\"" : "";
     if (need_space)
       out += " ";
+    if (fe_type(ctx, o) == FE_TNIL)
+    {
+      out += "()";
+      return;
+    }
+    const auto q = fe_type(ctx, o) == FE_TSTRING ? "\"" : "";
     out += q + from_string(ctx, o) + q;
     return;
   }
@@ -379,6 +386,7 @@ void FeWrap::saveFiles()
 {
   for (auto it = m_fileContents.begin(); it != m_fileContents.end(); ++it)
   {
+    QFileInfo(it.key()).absoluteDir().mkpath(".");
     QFile f(it.key());
     if (f.open(QFile::WriteOnly))
       f.write(it.value().toLocal8Bit());
