@@ -17,6 +17,7 @@
 #include <QShortcut>
 #include <QStatusBar>
 #include <QTimer>
+#include <memory>
 
 class CompleterEdit : public QLineEdit
 {
@@ -101,7 +102,8 @@ Cubes3D::~Cubes3D()
 
 void Cubes3D::closeEvent(QCloseEvent *e)
 {
-  on_actionsave_triggered();
+  if (!on_actionsave_triggered())
+    return;
 
   QSettings s;
   s.setValue("Main/geomtry", saveGeometry());
@@ -175,18 +177,21 @@ void Cubes3D::on_actionopen_triggered()
   open_file(f);
 }
 
-void Cubes3D::on_actionsave_triggered()
+bool Cubes3D::on_actionsave_triggered()
 {
   QApplication::setOverrideCursor(Qt::WaitCursor);
+  const auto guard = std::unique_ptr<Cubes3D, std::function<void(Cubes3D *)>>(
+      this, [](Cubes3D *) { QApplication::restoreOverrideCursor(); });
 
   m_feWrap->setCodeOf(m_editFile, ui->teFeIn->toPlainText());
-  eval_main();
-
-  m_feWrap->saveFiles();
-  ui->teFeIn->document()->setModified(false);
-  setEditFile(m_editFile);
-
-  QApplication::restoreOverrideCursor();
+  if (eval_main())
+  {
+    m_feWrap->saveFiles();
+    ui->teFeIn->document()->setModified(false);
+    setEditFile(m_editFile);
+    return true;
+  }
+  return false;
 }
 
 void Cubes3D::on_actionquit_triggered()
@@ -465,7 +470,7 @@ void Cubes3D::addAction(const QString &name, const std::function<void()> &t)
   addAction(name, {}, t);
 }
 
-void Cubes3D::eval_main()
+bool Cubes3D::eval_main()
 {
   ui->teFeOut->clear();
   ui->view3d->clear_scene();
@@ -478,7 +483,7 @@ void Cubes3D::eval_main()
   {
     ui->teFeOut->setTextColor(Qt::red);
     ui->teFeOut->append(QString("ERROR: ") + e.what());
-    return;
+    return false;
   }
 
   updateAnimationList();
@@ -496,5 +501,8 @@ void Cubes3D::eval_main()
   {
     ui->teFeOut->setTextColor(Qt::darkRed);
     ui->teFeOut->append(QString("FORMAT_ERROR: ") + e.what());
+    return false;
   }
+
+  return true;
 }

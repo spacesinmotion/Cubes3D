@@ -27,7 +27,7 @@ public:
 private slots:
   void on_actionnew_triggered();
   void on_actionopen_triggered();
-  void on_actionsave_triggered();
+  bool on_actionsave_triggered();
   void on_actionquit_triggered();
 
   void on_menuRecent_aboutToShow();
@@ -57,7 +57,7 @@ private:
   void addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t);
   void addAction(const QString &name, const std::function<void()> &t);
 
-  void eval_main();
+  bool eval_main();
 
 private:
   Ui::Cubes3D *ui;
