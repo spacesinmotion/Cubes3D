@@ -95,6 +95,12 @@ FeEdit::FeEdit(QWidget *parent)
   connect(this, &QTextEdit::cursorPositionChanged, this, &FeEdit::additionalHighlights);
 }
 
+void FeEdit::onEscapePressed()
+{
+  if (m_complete->popup()->isVisible())
+    m_complete->popup()->hide();
+}
+
 void FeEdit::keyPressEvent(QKeyEvent *ke)
 {
   if (m_complete->popup()->isVisible())

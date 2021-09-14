@@ -77,6 +77,7 @@ Cubes3D::Cubes3D(QWidget *parent)
       m_commandPanel->deleteLater();
       m_commandPanel = nullptr;
     }
+    ui->teFeIn->onEscapePressed();
     ui->teFeIn->setFocus();
   });
 

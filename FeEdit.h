@@ -11,6 +11,8 @@ class FeEdit : public QTextEdit
 public:
   explicit FeEdit(QWidget *parent = nullptr);
 
+  void onEscapePressed();
+
 signals:
   void requestGoToFile(const QString &);
 
