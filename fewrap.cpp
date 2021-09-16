@@ -494,6 +494,13 @@ fe_Object *FeWrap::_group(fe_Context *ctx, fe_Object *arg)
   return custom(ctx, std::move(c));
 }
 
+fe_Object *FeWrap::_helper(fe_Context *ctx, fe_Object *arg)
+{
+  auto c = std::make_unique<HelperContainer>();
+  add_all(*c, ctx, &arg);
+  return custom(ctx, std::move(c));
+}
+
 fe_Object *FeWrap::_translate(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<TranslateContainer>(s_vec(ctx, fe_nextarg(ctx, &arg)));
@@ -669,6 +676,8 @@ void FeWrap::init_fn(fe_Context *ctx)
 
   fe_set(ctx, fe_symbol(ctx, "cube"), fe_cfunc(ctx, _cube));
   fe_set(ctx, fe_symbol(ctx, "group"), fe_cfunc(ctx, _group));
+
+  fe_set(ctx, fe_symbol(ctx, "helper"), fe_cfunc(ctx, _helper));
 
   fe_set(ctx, fe_symbol(ctx, "lfo"), fe_cfunc(ctx, _lfo));
 

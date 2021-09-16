@@ -7,8 +7,7 @@ FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent)
   const QString groupPatterns[] = {
       QStringLiteral("\\brotate\\b"),  QStringLiteral("\\brotateZ\\b"), QStringLiteral("\\brotateY\\b"),
       QStringLiteral("\\brotateX\\b"), QStringLiteral("\\bgroup\\b"),   QStringLiteral("\\btranslate\\b"),
-      QStringLiteral("\\bscale\\b"),
-
+      QStringLiteral("\\bscale\\b"),   QStringLiteral("\\bhelper\\b"),
   };
   for (const QString &pattern : groupPatterns)
   {

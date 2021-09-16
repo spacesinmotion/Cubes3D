@@ -8,7 +8,7 @@ RenderDisplayObject::RenderDisplayObject(const SharedDisplayObject &o)
   : m_displayObject(o)
 {}
 
-void RenderDisplayObject::draw(QOpenGLShaderProgram &program, const QMatrix4x4 &t)
+void RenderDisplayObject::draw(QOpenGLShaderProgram &program, const QMatrix4x4 &t, bool)
 {
   program.setUniformValue("objectColor", m_color);
 
@@ -25,29 +25,35 @@ void RenderContainer::add(std::unique_ptr<RenderObject> ro)
   m_children.emplace_back(std::move(ro));
 }
 
-void RenderContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
+void RenderContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   for (const auto &ro : m_children)
-    ro->draw(p, t);
+    ro->draw(p, t, helper);
 }
 
-void ScaleContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
+void HelperContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
+{
+  if (helper)
+    RenderContainer::draw(p, t, helper);
+}
+
+void ScaleContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   QMatrix4x4 s = t;
   s.scale(m_scale->x, m_scale->y, m_scale->z);
-  RenderContainer::draw(p, s);
+  RenderContainer::draw(p, s, helper);
 }
 
-void TranslateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
+void TranslateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   QMatrix4x4 s = t;
   s.translate(m_translate->x, m_translate->y, m_translate->z);
-  RenderContainer::draw(p, s);
+  RenderContainer::draw(p, s, helper);
 }
 
-void RotateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t)
+void RotateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   QMatrix4x4 s = t;
   s.rotate(*m_angle, m_axis->x, m_axis->y, m_axis->z);
-  RenderContainer::draw(p, s);
+  RenderContainer::draw(p, s, helper);
 }

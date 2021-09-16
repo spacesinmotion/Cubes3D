@@ -76,8 +76,8 @@ void View3D::paintGL()
 
   if (m_drawHelper)
   {
-    drawLine(Qt::red, {slm::vec3(0), slm::transpose(m_cam.rotation())[0].xyz() / m_cam.zoom()});
-    drawLine(Qt::green, {slm::vec3(0), slm::transpose(m_cam.rotation())[1].xyz() / m_cam.zoom()});
+    // drawLine(Qt::red, {slm::vec3(0), slm::transpose(m_cam.rotation())[0].xyz() / m_cam.zoom()});
+    // drawLine(Qt::green, {slm::vec3(0), slm::transpose(m_cam.rotation())[1].xyz() / m_cam.zoom()});
 
     drawLine(Qt::lightGray,
              {slm::vec3(-1.0, -1.0, 4.0), slm::vec3(1.0, -1.0, 4.0), slm::vec3(-1.0, -1.0, 4.0),
@@ -202,7 +202,7 @@ void View3D::timerEvent(QTimerEvent *te)
 void View3D::drawObjects()
 {
   if (m_animation)
-    m_animation->scene->draw(m_program, QMatrix4x4());
+    m_animation->scene->draw(m_program, QMatrix4x4(), m_drawHelper);
 }
 
 void View3D::drawLine(const QColor &c, const std::vector<slm::vec3> &l)

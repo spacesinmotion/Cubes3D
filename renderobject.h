@@ -36,7 +36,7 @@ class RenderObject
 public:
   virtual ~RenderObject() = default;
 
-  virtual void draw(QOpenGLShaderProgram &, const QMatrix4x4 &) = 0;
+  virtual void draw(QOpenGLShaderProgram &, const QMatrix4x4 &, bool) = 0;
 
   static PrimitiveProvider *primitives;
 };
@@ -46,7 +46,7 @@ class RenderDisplayObject : public RenderObject
 public:
   explicit RenderDisplayObject(const SharedDisplayObject &disp);
 
-  void draw(QOpenGLShaderProgram &program, const QMatrix4x4 &t) final;
+  void draw(QOpenGLShaderProgram &program, const QMatrix4x4 &t, bool) final;
 
   void setColor(const QColor &c) { m_color = c; }
   void set_scale(const slm::vec3 &s) { m_scale = s; }
@@ -64,10 +64,18 @@ public:
 
   void add(std::unique_ptr<RenderObject> ro);
 
-  void draw(QOpenGLShaderProgram &, const QMatrix4x4 &) override;
+  void draw(QOpenGLShaderProgram &, const QMatrix4x4 &, bool) override;
 
 private:
   std::vector<std::unique_ptr<RenderObject>> m_children;
+};
+
+class HelperContainer : public RenderContainer
+{
+public:
+  HelperContainer() = default;
+
+  void draw(QOpenGLShaderProgram &, const QMatrix4x4 &, bool) final;
 };
 
 class ScaleContainer : public RenderContainer
@@ -84,7 +92,7 @@ public:
   void set_scale(const s_vec3 &s) { m_scale = s; }
   void set_scale(const slm::vec3 &s) { set_scale(shared(s)); }
 
-  void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
+  void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool) final;
 
 private:
   s_vec3 m_scale{shared(slm::vec3(1.0))};
@@ -104,7 +112,7 @@ public:
   void set_translate(const s_vec3 &t) { m_translate = t; }
   void set_translate(const slm::vec3 &t) { set_translate(shared(t)); }
 
-  void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
+  void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool) final;
 
 private:
   s_vec3 m_translate{shared(slm::vec3(1.0))};
@@ -132,7 +140,7 @@ public:
   void set_rotate(float a, const s_vec3 &ax) { set_rotate(shared(a), ax); }
   void set_rotate(s_float a, const slm::vec3 &ax) { set_rotate(a, shared(ax)); }
 
-  void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t) final;
+  void draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool) final;
 
 private:
   s_float m_angle{shared(0.0f)};
