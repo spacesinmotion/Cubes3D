@@ -147,14 +147,17 @@ static s_vec3 s_vec(fe_Context *ctx, fe_Object *o)
 
   if (fe_type(ctx, o) == FE_TFUNC)
   {
-    auto r = shared_d(ctx, o, slm::vec3(0.0));
+    auto r = s_vec3{shared_d(ctx, o, 0.0f), shared_d(ctx, o, 0.0f), shared_d(ctx, o, 0.0f)};
     _scene(ctx)->on_tick([r, ctx, o](auto t) {
       int gc = fe_savegc(ctx);
 
       fe_Object *objs[2];
       objs[0] = o;
       objs[1] = fe_number(ctx, t);
-      *r = get<slm::vec3>(ctx, fe_eval(ctx, fe_list(ctx, objs, 2)));
+      const auto v = get<s_vec3>(ctx, fe_eval(ctx, fe_list(ctx, objs, 2)));
+      *r[0] = *v[0];
+      *r[1] = *v[1];
+      *r[2] = *v[2];
       fe_restoregc(ctx, gc);
     });
     return r;
@@ -434,14 +437,14 @@ fe_Object *FeWrap::_min(fe_Context *ctx, fe_Object *arg)
 
 fe_Object *FeWrap::_vec3(fe_Context *ctx, fe_Object *arg)
 {
-  auto x = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  auto x = s_number(ctx, fe_nextarg(ctx, &arg));
   if (fe_isnil(ctx, arg))
-    return custom(ctx, vec3(x));
+    return custom(ctx, s_vec3{x, x, x});
 
-  auto y = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  auto z = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  auto y = s_number(ctx, fe_nextarg(ctx, &arg));
+  auto z = s_number(ctx, fe_nextarg(ctx, &arg));
 
-  return custom(ctx, vec3(x, y, z));
+  return custom(ctx, s_vec3{x, y, z});
 }
 
 fe_Object *FeWrap::_color(fe_Context *ctx, fe_Object *arg)
@@ -463,7 +466,10 @@ fe_Object *FeWrap::_cube(fe_Context *ctx, fe_Object *arg)
 {
   auto c = std::make_unique<RenderDisplayObject>(RenderObject::primitives->cube());
   if (!fe_isnil(ctx, arg))
-    c->set_scale(get<vec3>(ctx, fe_nextarg(ctx, &arg)));
+  {
+    auto v = s_vec(ctx, fe_nextarg(ctx, &arg));
+    c->set_scale(slm::vec3(*v[0], *v[1], *v[2]));
+  }
   if (!fe_isnil(ctx, arg))
     c->setColor(get<QColor>(ctx, fe_nextarg(ctx, &arg)));
 
@@ -481,7 +487,8 @@ fe_Object *FeWrap::_animation(fe_Context *ctx, fe_Object *arg)
   auto *sh = _scene(ctx);
   const auto name = from_string(ctx, fe_nextarg(ctx, &arg));
   const auto length = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  const auto lp = get<vec3>(ctx, fe_nextarg(ctx, &arg));
+  auto v = s_vec(ctx, fe_nextarg(ctx, &arg));
+  const auto lp = vec3(*v[0], *v[1], *v[2]);
   sh->add_animation(name, length, lp, _uobj(ctx, fe_nextarg(ctx, &arg)));
 
   return fe_bool(ctx, false);
@@ -580,13 +587,13 @@ template <typename T> fe_Object *_lfo_i(fe_Context *ctx, T center, T amp, float 
 fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
 {
   auto *a1 = fe_nextarg(ctx, &arg);
-  if (is<vec3>(ctx, a1))
-  {
-    const auto center = get<vec3>(ctx, a1);
-    const auto amp = get<vec3>(ctx, fe_nextarg(ctx, &arg));
-    const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-    return _lfo_i(ctx, center, amp, frequency);
-  }
+  // if (is<vec3>(ctx, a1))
+  // {
+  //   const auto center = get<vec3>(ctx, a1);
+  //   const auto amp = get<vec3>(ctx, fe_nextarg(ctx, &arg));
+  //   const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+  //   return _lfo_i(ctx, center, amp, frequency);
+  // }
 
   const auto center = fe_tonumber(ctx, a1);
   const auto amp = fe_tonumber(ctx, fe_nextarg(ctx, &arg));

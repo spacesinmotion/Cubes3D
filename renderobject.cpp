@@ -40,20 +40,20 @@ void HelperContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool he
 void ScaleContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   QMatrix4x4 s = t;
-  s.scale(m_scale->x, m_scale->y, m_scale->z);
+  s.scale(*m_scale[0], *m_scale[1], *m_scale[2]);
   RenderContainer::draw(p, s, helper);
 }
 
 void TranslateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   QMatrix4x4 s = t;
-  s.translate(m_translate->x, m_translate->y, m_translate->z);
+  s.translate(*m_translate[0], *m_translate[1], *m_translate[2]);
   RenderContainer::draw(p, s, helper);
 }
 
 void RotateContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)
 {
   QMatrix4x4 s = t;
-  s.rotate(*m_angle, m_axis->x, m_axis->y, m_axis->z);
+  s.rotate(*m_angle, *m_axis[0], *m_axis[1], *m_axis[2]);
   RenderContainer::draw(p, s, helper);
 }
