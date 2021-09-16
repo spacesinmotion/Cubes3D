@@ -44,10 +44,10 @@ FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent)
   }
 
   static const char *primnames[] = {
-      "let",  "=",     "if",    "fn",     "mac",    "while", "quote", "and",       "or",      "do",
-      "cons", "car",   "cdr",   "setcar", "setcdr", "list",  "not",   "is",        "atom",    "print",
-      "show", "add",   "clear", "sin",    "cos",    "tan",   "asin",  "acos",      "atan",    "deg",
-      "rad",  "floor", "ceil",  "sqrt",   "abs",    "max",   "min",   "animation", "require",
+      "let",   "=",   "if",     "fn",     "mac",       "while",   "quote", "and",  "or",    "do",    "cons",
+      "car",   "cdr", "setcar", "setcdr", "list",      "not",     "is",    "atom", "print", "show",  "add",
+      "clear", "sin", "cos",    "tan",    "asin",      "acos",    "atan",  "deg",  "rad",   "floor", "ceil",
+      "sqrt",  "abs", "max",    "min",    "animation", "require", "fsin",  "fcos",
   };
   for (const auto *pattern : primnames)
   {

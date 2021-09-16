@@ -240,9 +240,9 @@ static bool format_need_break(fe_Context *ctx, fe_Object *o)
       char buffer[256] = {0};
       fe_tostring(ctx, a, buffer, 255);
       for (const auto *key : {
-               "vec3", "lfo", "color", "fn",    "mac",  "=",    "+",   "-",    "*",
-               "/",    "<",   "%",     "<=",    "sin",  "cos",  "tan", "asin", "acos",
-               "atan", "deg", "rad",   "floor", "ceil", "sqrt", "abs", "max",  "min",
+               "vec3", "lfo",   "color", "fn",   "mac", "=",   "+",    "-",    "*",    "/",
+               "<",    "%",     "<=",    "sin",  "cos", "tan", "asin", "acos", "atan", "deg",
+               "rad",  "floor", "ceil",  "sqrt", "abs", "max", "min",  "fsin", "fcos",
            })
         if (strcmp(buffer, key) == 0)
           return false;
@@ -651,6 +651,20 @@ void FeWrap::init_fn(fe_Context *ctx)
   fe_set(ctx, fe_symbol(ctx, "deg"), fe_cfunc(ctx, [](fe_Context *ctx, fe_Object *arg) {
            const auto n = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
            return fe_number(ctx, 180.0 * (n / M_PI));
+         }));
+  fe_set(ctx, fe_symbol(ctx, "fsin"), fe_cfunc(ctx, [](fe_Context *ctx, fe_Object *arg) {
+           const auto n = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+           auto f = 1.0;
+           if (!fe_isnil(ctx, arg))
+             f = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+           return fe_number(ctx, sin(f * 2.0 * n * M_PI));
+         }));
+  fe_set(ctx, fe_symbol(ctx, "fcos"), fe_cfunc(ctx, [](fe_Context *ctx, fe_Object *arg) {
+           const auto n = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+           auto f = 1.0;
+           if (!fe_isnil(ctx, arg))
+             f = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
+           return fe_number(ctx, cos(f * 2.0 * n * M_PI));
          }));
 
 #define _func(f)                                                                                                       \
