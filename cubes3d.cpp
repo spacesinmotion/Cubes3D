@@ -13,6 +13,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPainter>
+#include <QProcess>
 #include <QScrollBar>
 #include <QSettings>
 #include <QShortcut>
@@ -71,6 +72,7 @@ Cubes3D::Cubes3D(QWidget *parent)
   addAction("go to definition", Qt::ControlModifier + Qt::Key_M, [this] { goToDefinition(); });
   addAction("go to file", Qt::ControlModifier + Qt::Key_Tab, [this] { goToFile(); });
   addAction("export sprite map", [this] { exportSpriteMap(); });
+  addAction("!sh", Qt::ControlModifier + Qt::ShiftModifier + Qt::Key_1, [this] { someShellCommand(); });
 
   new QShortcut(Qt::Key_F1, this, [this] { showCommands(); });
   new QShortcut(Qt::Key_Escape, this, [this] {
@@ -455,6 +457,42 @@ void Cubes3D::exportSpriteMap()
                                    {"animations", jsonAnimations},
                                })
                      .toJson(QJsonDocument::Indented));
+}
+
+void Cubes3D::someShellCommand()
+{
+  showCommandPanel(QStringList{"git last", "git status", "git commit -a -m \"state\"", "tree", "ls"},
+                   [this](const auto &s) {
+                     ui->teFeOut->clear();
+                     ui->teFeOut->setTextColor(Qt::black);
+                     ui->teFeOut->append("> " + s);
+
+                     QProcess p;
+                     auto ss = s.split(' ');
+                     p.setProgram(ss.takeFirst());
+                     p.setArguments(ss);
+                     p.start();
+                     if (!p.waitForStarted())
+                     {
+                       ui->teFeOut->setTextColor(Qt::red);
+                       ui->teFeOut->append("Process failed to start");
+                       ui->teFeOut->append(p.readAllStandardError());
+                       ui->teFeOut->append(p.readAll());
+                       return;
+                     }
+                     if (!p.waitForFinished())
+                     {
+                       ui->teFeOut->setTextColor(Qt::red);
+                       ui->teFeOut->append("Process failed to stop!");
+                       ui->teFeOut->append(p.readAllStandardError());
+                       ui->teFeOut->append(p.readAll());
+                     }
+                     else
+                     {
+                       ui->teFeOut->setTextColor(Qt::black);
+                       ui->teFeOut->append(p.readAll());
+                     }
+                   });
 }
 
 void Cubes3D::addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t)
