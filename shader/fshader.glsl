@@ -19,7 +19,14 @@ void main()
     vec3 lightColor = vec3(1,1,1);
 
     vec3 L = normalize(lightPos - vertex).xyz;
-    Idiff = lightColor * max(dot(normalize(normal.xyz),L), 0.0);
+    float dens = max(dot(normalize(normal.xyz),L), 0.0);
+    if (dens > 0.7)
+      dens = 1.0;
+    else if (dens > 0.3)
+      dens = 0.7;
+    else 
+      dens = 0.3;
+    Idiff = lightColor * dens;
     Idiff = clamp(Idiff, vec3(0.0), vec3(1.0));
   }
 
