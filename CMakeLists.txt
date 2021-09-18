@@ -33,6 +33,7 @@ add_executable(Cubes3D
     geometry.h
     geometry.cpp
     camera.cpp
+    util.h
     view3d.h
     view3d.cpp
     plyimport.cpp

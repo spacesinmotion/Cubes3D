@@ -108,7 +108,6 @@ template <typename R> std::shared_ptr<R> shared_d(fe_Context *ctx, fe_Object *o,
   auto r = shared(v, [ctx, key](auto *x) {
     delete x;
     int gc = fe_savegc(ctx);
-    fe_set(ctx, fe_symbol(ctx, key.c_str()), fe_bool(ctx, false));
     fe_restoregc(ctx, gc);
     keys.push_back(key);
   });
