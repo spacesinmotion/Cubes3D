@@ -13,6 +13,7 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QPainter>
+#include <QScrollBar>
 #include <QSettings>
 #include <QShortcut>
 #include <QStatusBar>
@@ -490,12 +491,14 @@ bool Cubes3D::eval_main()
 
   try
   {
+    const auto sv = ui->teFeIn->verticalScrollBar()->value();
     const auto p = ui->teFeIn->textCursor().position();
     ui->teFeIn->setText(m_feWrap->format(m_feWrap->codeOf(m_editFile)));
 
     auto c = ui->teFeIn->textCursor();
     c.movePosition(c.Right, c.MoveAnchor, p);
     ui->teFeIn->setTextCursor(c);
+    ui->teFeIn->verticalScrollBar()->setValue(sv);
   }
   catch (const std::runtime_error &e)
   {
