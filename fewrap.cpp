@@ -200,11 +200,12 @@ QString FeWrap::newSession(const QString &f)
 QString FeWrap::eval()
 {
   setlocale(LC_ALL, "C");
-  auto gc = fe_savegc(m_fe);
+  m_evalStackBackup = fe_savegc(m_fe);
+  // qDebug() << "stack" << m_evalStackBackup;
 
   const auto last_text = from_string(m_fe, _eval(m_fe, codeOf(m_mainFile)));
 
-  fe_restoregc(m_fe, gc);
+  fe_restoregc(m_fe, m_evalStackBackup);
   setlocale(LC_ALL, "");
   return last_text;
 }
@@ -311,7 +312,7 @@ QString FeWrap::format(const QString &fe)
   const auto fet = fe.toLocal8Bit();
   auto it = fet.begin();
 
-  int gc = fe_savegc(m_fe);
+  m_evalStackBackup = fe_savegc(m_fe);
 
   QString made;
   QString br;
@@ -326,7 +327,7 @@ QString FeWrap::format(const QString &fe)
     format__(m_fe, r, made);
     br = "\n\n";
 
-    fe_restoregc(m_fe, gc);
+    fe_restoregc(m_fe, m_evalStackBackup);
   }
   return made;
 }
@@ -626,11 +627,13 @@ fe_Object *FeWrap::_require(fe_Context *ctx, fe_Object *arg)
   return _eval(ctx, _self(ctx)->codeOf(f));
 }
 
-[[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl)
+[[noreturn]] void FeWrap::on_error(fe_Context *ctx, const char *err, fe_Object *cl)
 {
   auto x = QString(err);
   while (!fe_isnil(ctx, cl))
     x += "\n=> " + from_string(ctx, fe_nextarg(ctx, &cl));
+
+  fe_restoregc(ctx, _self(ctx)->m_evalStackBackup);
   throw std::runtime_error(x.toLocal8Bit());
 }
 

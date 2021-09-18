@@ -66,6 +66,7 @@ private:
 
   static fe_Object *_eval(fe_Context *ctx, const QString &);
   static fe_Object *_require(fe_Context *ctx, fe_Object *arg);
+  [[noreturn]] static void on_error(fe_Context *ctx, const char *err, fe_Object *cl);
 
   void init_fn(fe_Context *ctx);
 
@@ -79,6 +80,8 @@ private:
   QString m_mainFile;
   QHash<QString, QString> m_fileContents;
   bool m_hasChanges{false};
+
+  int m_evalStackBackup{0};
 };
 
 #endif // FEWRAP_H
