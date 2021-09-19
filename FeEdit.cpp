@@ -412,8 +412,14 @@ void FeEdit::goToDefinition()
 
   if (selection.startsWith("(require "))
   {
-    auto s = selection.replace("(", "").replace(")", "").split(' ', Qt::SkipEmptyParts);
-    if (s.size() >= 2)
-      emit requestGoToFile(s[1].replace("\"", "").replace(".", QDir::separator()).trimmed() + ".fe");
+    auto c = backUp;
+    const auto *d = c.document();
+    while (!c.atStart() && d->characterAt(c.position()) != '\"')
+      c.movePosition(c.WordLeft);
+    c.movePosition(c.Right);
+    while (!c.atEnd() && d->characterAt(c.position()) != '\"')
+      c.movePosition(c.Right, c.KeepAnchor);
+    auto s = c.selectedText();
+    emit requestGoToFile(s.replace("\"", "").replace(".", QDir::separator()).trimmed() + ".fe");
   }
 }

@@ -623,8 +623,17 @@ fe_Object *FeWrap::_eval(fe_Context *ctx, const QString &fe)
 
 fe_Object *FeWrap::_require(fe_Context *ctx, fe_Object *arg)
 {
-  const auto f = from_string(ctx, fe_nextarg(ctx, &arg)).replace(".", QDir::separator()).append(".fe");
-  return _eval(ctx, _self(ctx)->codeOf(f));
+  fe_Object *last{nullptr};
+  int gc = fe_savegc(ctx);
+  while (!fe_isnil(ctx, arg))
+  {
+    const auto f = from_string(ctx, fe_nextarg(ctx, &arg)).replace(".", QDir::separator()).append(".fe");
+    last = _eval(ctx, _self(ctx)->codeOf(f));
+
+    fe_restoregc(ctx, gc);
+    fe_pushgc(ctx, last);
+  }
+  return last;
 }
 
 [[noreturn]] void FeWrap::on_error(fe_Context *ctx, const char *err, fe_Object *cl)
