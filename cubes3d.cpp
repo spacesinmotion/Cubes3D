@@ -270,13 +270,15 @@ void Cubes3D::setEditFile(const QString &f)
   setWindowTitle(QApplication::applicationName() + QString("%2 (%1)").arg(m_editFile).arg(changed ? "*" : ""));
 }
 
-void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb)
+void Cubes3D::showCommandPanel(const QStringList &list, const std::function<void(const QString &)> &cb,
+                               const QString &placeHolder)
 {
   if (m_commandPanel)
     return;
 
   m_commandPanel = new CompleterEdit(this);
   m_commandPanel->setFont(ui->teFeIn->font());
+  m_commandPanel->setPlaceholderText(placeHolder);
 
   auto *c = new QCompleter(list, m_commandPanel);
   c->setCaseSensitivity(Qt::CaseInsensitive);
@@ -314,23 +316,28 @@ void Cubes3D::showCommands()
   QHash<QString, QAction *> allActions;
   getAllActions(ui->menuBar->actions(), allActions);
   getAllActions(actions(), allActions);
-  showCommandPanel(allActions.keys(), [allActions](const auto &s) {
-    if (auto *a = allActions.value(s))
-      a->trigger();
-    else
-      qDebug() << "no command" << s;
-  });
+  showCommandPanel(
+      allActions.keys(),
+      [allActions](const auto &s) {
+        if (auto *a = allActions.value(s))
+          a->trigger();
+        else
+          qDebug() << "no command" << s;
+      },
+      "command");
 }
 
 void Cubes3D::selectAnimation()
 {
-  showCommandPanel(ui->view3d->animations(),
-                   [this](const auto &s) { ui->cbAnimation->setCurrentIndex(ui->cbAnimation->findText(s)); });
+  showCommandPanel(
+      ui->view3d->animations(),
+      [this](const auto &s) { ui->cbAnimation->setCurrentIndex(ui->cbAnimation->findText(s)); }, "animation");
 }
 
 void Cubes3D::openRecentFile()
 {
-  showCommandPanel(QSettings().value("Main/RecentFiles").toStringList(), [this](const auto &s) { open_file(s); });
+  showCommandPanel(
+      QSettings().value("Main/RecentFiles").toStringList(), [this](const auto &s) { open_file(s); }, "recent file");
 }
 
 void Cubes3D::goToDefinition()
@@ -349,17 +356,20 @@ void Cubes3D::goToDefinition()
   for (const auto &d : def)
     defNames << QString("%1%3:%2").arg(d.second).arg(d.first, 3).arg(QString(maxLength - d.second.size(), ' '));
 
-  showCommandPanel(defNames, [this](const auto &s) {
-    const auto line = s.split(":").back().toInt() - 1;
-    auto c = ui->teFeIn->textCursor();
-    c.movePosition(c.StartOfLine);
-    while (c.blockNumber() > line && !c.atStart())
-      c.movePosition(c.Up);
-    while (c.blockNumber() < line && !c.atEnd())
-      c.movePosition(c.Down);
-    ui->teFeIn->setTextCursor(c);
-    ui->teFeIn->setFocus();
-  });
+  showCommandPanel(
+      defNames,
+      [this](const auto &s) {
+        const auto line = s.split(":").back().toInt() - 1;
+        auto c = ui->teFeIn->textCursor();
+        c.movePosition(c.StartOfLine);
+        while (c.blockNumber() > line && !c.atStart())
+          c.movePosition(c.Up);
+        while (c.blockNumber() < line && !c.atEnd())
+          c.movePosition(c.Down);
+        ui->teFeIn->setTextCursor(c);
+        ui->teFeIn->setFocus();
+      },
+      "definition");
 }
 
 void Cubes3D::goToFile(const QString &s)
@@ -384,7 +394,8 @@ void Cubes3D::goToFile(const QString &s)
 
 void Cubes3D::goToFile()
 {
-  showCommandPanel(m_feWrap->usedFiles(), [this](const auto &s) { goToFile(s); });
+  showCommandPanel(
+      m_feWrap->usedFiles(), [this](const auto &s) { goToFile(s); }, "file");
 }
 
 void Cubes3D::exportSpriteMap()
@@ -462,38 +473,40 @@ void Cubes3D::exportSpriteMap()
 
 void Cubes3D::someShellCommand()
 {
-  showCommandPanel(QStringList{"git last", "git status", "git commit -a -m \"state\"", "tree", "ls"},
-                   [this](const auto &s) {
-                     ui->teFeOut->clear();
-                     ui->teFeOut->setTextColor(Qt::black);
-                     ui->teFeOut->append("> " + s);
+  showCommandPanel(
+      QStringList{"git last", "git status", "git commit -a -m \"state\"", "tree", "ls"},
+      [this](const auto &s) {
+        ui->teFeOut->clear();
+        ui->teFeOut->setTextColor(Qt::black);
+        ui->teFeOut->append("> " + s);
 
-                     QProcess p;
-                     auto ss = s.split(' ');
-                     p.setProgram(ss.takeFirst());
-                     p.setArguments(ss);
-                     p.start();
-                     if (!p.waitForStarted())
-                     {
-                       ui->teFeOut->setTextColor(Qt::red);
-                       ui->teFeOut->append("Process failed to start");
-                       ui->teFeOut->append(p.readAllStandardError());
-                       ui->teFeOut->append(p.readAll());
-                       return;
-                     }
-                     if (!p.waitForFinished())
-                     {
-                       ui->teFeOut->setTextColor(Qt::red);
-                       ui->teFeOut->append("Process failed to stop!");
-                       ui->teFeOut->append(p.readAllStandardError());
-                       ui->teFeOut->append(p.readAll());
-                     }
-                     else
-                     {
-                       ui->teFeOut->setTextColor(Qt::black);
-                       ui->teFeOut->append(p.readAll());
-                     }
-                   });
+        QProcess p;
+        auto ss = s.split(' ');
+        p.setProgram(ss.takeFirst());
+        p.setArguments(ss);
+        p.start();
+        if (!p.waitForStarted())
+        {
+          ui->teFeOut->setTextColor(Qt::red);
+          ui->teFeOut->append("Process failed to start");
+          ui->teFeOut->append(p.readAllStandardError());
+          ui->teFeOut->append(p.readAll());
+          return;
+        }
+        if (!p.waitForFinished())
+        {
+          ui->teFeOut->setTextColor(Qt::red);
+          ui->teFeOut->append("Process failed to stop!");
+          ui->teFeOut->append(p.readAllStandardError());
+          ui->teFeOut->append(p.readAll());
+        }
+        else
+        {
+          ui->teFeOut->setTextColor(Qt::black);
+          ui->teFeOut->append(p.readAll());
+        }
+      },
+      "$");
 }
 
 void Cubes3D::addAction(const QString &name, const QKeySequence &ks, const std::function<void()> &t)

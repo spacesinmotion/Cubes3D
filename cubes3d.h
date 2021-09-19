@@ -44,7 +44,8 @@ private:
 
   void setEditFile(const QString &f);
 
-  void showCommandPanel(const QStringList &, const std::function<void(const QString &)> &cb);
+  void showCommandPanel(const QStringList &, const std::function<void(const QString &)> &cb,
+                        const QString &placeHolder = {});
 
   void showCommands();
   void selectAnimation();
