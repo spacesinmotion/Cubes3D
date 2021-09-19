@@ -587,14 +587,6 @@ template <typename T> fe_Object *_lfo_i(fe_Context *ctx, T center, T amp, float 
 fe_Object *FeWrap::_lfo(fe_Context *ctx, fe_Object *arg)
 {
   auto *a1 = fe_nextarg(ctx, &arg);
-  // if (is<vec3>(ctx, a1))
-  // {
-  //   const auto center = get<vec3>(ctx, a1);
-  //   const auto amp = get<vec3>(ctx, fe_nextarg(ctx, &arg));
-  //   const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
-  //   return _lfo_i(ctx, center, amp, frequency);
-  // }
-
   const auto center = fe_tonumber(ctx, a1);
   const auto amp = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
   const auto frequency = fe_tonumber(ctx, fe_nextarg(ctx, &arg));
