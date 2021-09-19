@@ -32,6 +32,11 @@ void View3D::showAnimation(const QString &name)
       m_animation = &a;
 }
 
+void View3D::toggleHelper()
+{
+  m_drawHelper = !m_drawHelper;
+}
+
 void View3D::initializeGL()
 {
   initializeOpenGLFunctions();
@@ -310,9 +315,10 @@ QImage View3D::toImage(double t, int w, int h)
   glDepthFunc(GL_LESS);
   glEnable(GL_CULL_FACE);
 
+  const auto drawHelper = m_drawHelper;
   m_drawHelper = false;
   paintGL();
-  m_drawHelper = true;
+  m_drawHelper = drawHelper;
 
   auto i = fbo.toImage(true);
   revert();

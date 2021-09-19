@@ -27,6 +27,7 @@ public:
   ~View3D();
 
   void showAnimation(const QString &name);
+  void toggleHelper();
 
   slm::vec3 mouseInSpace(const QPoint &mp);
 

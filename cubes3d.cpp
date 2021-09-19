@@ -73,6 +73,7 @@ Cubes3D::Cubes3D(QWidget *parent)
   addAction("go to file", Qt::ControlModifier + Qt::Key_Tab, [this] { goToFile(); });
   addAction("export sprite map", [this] { exportSpriteMap(); });
   addAction("!sh", Qt::ControlModifier + Qt::ShiftModifier + Qt::Key_1, [this] { someShellCommand(); });
+  addAction("toggle helper", [this] { ui->view3d->toggleHelper(); });
 
   new QShortcut(Qt::Key_F1, this, [this] { showCommands(); });
   new QShortcut(Qt::Key_Escape, this, [this] {
