@@ -330,9 +330,10 @@ QVector<QPixmap> View3D::allFrames(int w, int h)
   if (!m_animation)
     return {};
   const auto count = int(20.0 * m_animation->length);
+  const auto step = m_animation->length / count;
   QVector<QPixmap> frames;
   for (int i = 0; i < count; ++i)
-    frames << QPixmap::fromImage(toImage(double(i) / double(count), w, h));
+    frames << QPixmap::fromImage(toImage(double(i) * step, w, h));
   return frames;
 }
 
