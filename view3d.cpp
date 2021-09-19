@@ -290,7 +290,9 @@ QImage View3D::toImage(double t, int w, int h)
     qDebug() << "Can't create GL context.";
   }
   QOffscreenSurface surface;
-  surface.setFormat(this->context()->format());
+  auto format = this->context()->format();
+  format.setAlphaBufferSize(8);
+  surface.setFormat(format);
   surface.create();
   if (!surface.isValid())
   {
