@@ -233,102 +233,96 @@ void FeWrap::setCodeOf(const QString &f, const QString &c)
   m_hasChanges = true;
 }
 
-static bool format_need_break(fe_Context *ctx, fe_Object *o)
+int format_handle_line_break(const QString &fe, int &i)
 {
-  if (fe_type(ctx, o) == FE_TPAIR)
+  int nb_ln = 0;
+  while (fe.size() > i && fe.at(i).isSpace())
   {
-    auto *a = fe_nextarg(ctx, &o);
-    if (fe_type(ctx, a) == FE_TSYMBOL)
-    {
-      char buffer[256] = {0};
-      fe_tostring(ctx, a, buffer, 255);
-      for (const auto *key : {
-               "vec3", "lfo",   "color", "fn",   "mac", "=",   "+",    "-",    "*",    "/",
-               "<",    "%",     "<=",    "sin",  "cos", "tan", "asin", "acos", "atan", "deg",
-               "rad",  "floor", "ceil",  "sqrt", "abs", "max", "min",  "fsin", "fcos",
-           })
-        if (strcmp(buffer, key) == 0)
-          return false;
-    }
+    if (fe.at(i) == '\n')
+      ++nb_ln;
+    ++i;
+  }
+  return nb_ln;
+}
+
+bool format_handle_line_break(QString &made, const QString &fe, int &i, int indent)
+{
+  if (0 < format_handle_line_break(fe, i))
+  {
+    made += '\n' + QString(indent * 2, QChar(' '));
     return true;
   }
+  made.push_back(' ');
   return false;
 }
 
-static int format_force_no_break(fe_Context *ctx, fe_Object *o)
+void format_list(QString &made, const QString &fe, int &i, int indent, int d = 0)
 {
-  if (fe_type(ctx, o) == FE_TPAIR)
+  bool had_break = false;
+  while (fe.size() > i)
   {
-    auto *a = fe_nextarg(ctx, &o);
-    if (fe_type(ctx, a) == FE_TSYMBOL)
+    if (fe.at(i) == '(')
     {
-      char buffer[256] = {0};
-      fe_tostring(ctx, a, buffer, 255);
-      for (const auto *key : {"fn", "=", "mac"})
-        if (strcmp(buffer, key) == 0)
-          return 2;
+      made.push_back(fe.at(i));
+      ++i;
+      format_list(made, fe, i, had_break ? (indent + 1) : indent, d + 1);
+      if (d == 0)
+      {
+        const auto c = std::max(1, std::min(2, format_handle_line_break(fe, i)));
+        for (int j = 0; j < c; ++j)
+          made += "\n";
+      }
+      else if (format_handle_line_break(made, fe, i, indent))
+        had_break = true;
     }
-  }
-  return 0;
-}
-
-static void format__(fe_Context *ctx, fe_Object *o, QString &out, bool force_no_break = false, QString ind = "  ")
-{
-  bool need_space = (!out.isEmpty() && out.back() != '(' && out.back() != '\n');
-
-  if (fe_type(ctx, o) != FE_TPAIR)
-  {
-    if (need_space)
-      out += " ";
-    if (fe_type(ctx, o) == FE_TNIL)
+    else if (fe.at(i) == ')')
     {
-      out += "()";
+      auto xx = made.toStdString();
+      while (made.back().isSpace())
+        made.chop(1);
+      made.push_back(fe.at(i));
+      ++i;
       return;
     }
-    const auto q = fe_type(ctx, o) == FE_TSTRING ? "\"" : "";
-    out += q + from_string(ctx, o) + q;
-    return;
+    else if (fe.at(i) == '"')
+    {
+      do
+      {
+        made.push_back(fe.at(i));
+        ++i;
+      } while (fe.size() > i && fe.at(i) != '"');
+      if (fe.size() > i)
+      {
+        auto x = fe.at(i).toLatin1();
+        made.push_back(fe.at(i));
+        ++i;
+      }
+      if (format_handle_line_break(made, fe, i, indent))
+        had_break = true;
+    }
+    else if (!fe.at(i).isSpace())
+    {
+      do
+      {
+        made.push_back(fe.at(i));
+        ++i;
+      } while (fe.size() > i && !fe.at(i).isSpace() && fe.at(i) != '(' && fe.at(i) != ')');
+      if (format_handle_line_break(made, fe, i, indent))
+        had_break = true;
+    }
+    else
+      ++i;
   }
-
-  if (!force_no_break && !out.isEmpty() && out.back() != '\n' && format_need_break(ctx, o))
-  {
-    out += "\n" + ind;
-    ind += "  ";
-  }
-  else if (need_space)
-    out += " ";
-  out += "(";
-  int no_break = format_force_no_break(ctx, o);
-  while (!fe_isnil(ctx, o))
-  {
-    format__(ctx, fe_nextarg(ctx, &o), out, no_break > 0, ind);
-    no_break--;
-  }
-  out += ")";
 }
 
 QString FeWrap::format(const QString &fe)
 {
-  const auto fet = fe.toLocal8Bit();
-  auto it = fet.begin();
-
-  m_evalStackBackup = fe_savegc(m_fe);
-
   QString made;
-  QString br;
-
-  for (;;)
-  {
-    auto *r = fe_read(m_fe, read_fn, &it);
-    if (!r)
-      break;
-
-    made += br;
-    format__(m_fe, r, made);
-    br = "\n\n";
-
-    fe_restoregc(m_fe, m_evalStackBackup);
-  }
+  int i = 0;
+  format_list(made, fe, i, 1);
+  if (made.size() > 2)
+    while (made.back() == '\n' && made[made.size() - 2] == '\n')
+      made.chop(1);
   return made;
 }
 
