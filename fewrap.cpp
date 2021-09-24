@@ -261,7 +261,18 @@ void format_list(QString &made, const QString &fe, int &i, int indent, int d = 0
   bool had_break = false;
   while (fe.size() > i)
   {
-    if (fe.at(i) == '(')
+    if (fe.at(i) == ';')
+    {
+      made.push_back(';');
+      ++i;
+      if (fe.size() > i && !fe.at(i).isSpace())
+        made.push_back(' ');
+      while (fe.size() > i && fe.at(i) != '\n')
+        made.push_back(fe.at(i++));
+      if (format_handle_line_break(made, fe, i, d == 0 ? 0 : indent) && d > 0)
+        had_break = true;
+    }
+    else if (fe.at(i) == '(')
     {
       made.push_back(fe.at(i));
       ++i;
