@@ -394,8 +394,10 @@ void Cubes3D::goToFile(const QString &s)
 
 void Cubes3D::goToFile()
 {
+  auto files = m_feWrap->usedFiles();
+  std::sort(std::begin(files), std::end(files));
   showCommandPanel(
-      m_feWrap->usedFiles(), [this](const auto &s) { goToFile(s); }, "file");
+      files, [this](const auto &s) { goToFile(s); }, "file");
 }
 
 void Cubes3D::exportSpriteMap()
