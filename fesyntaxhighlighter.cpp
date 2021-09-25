@@ -63,7 +63,7 @@ FeSyntaxHighlighter::FeSyntaxHighlighter(QTextDocument *parent)
   rule.format.setForeground(Qt::darkBlue);
   highlightingRules.append(rule);
 
-  rule.pattern = QRegularExpression(QStringLiteral("\".*\""));
+  rule.pattern = QRegularExpression(QStringLiteral("\"[^\"]*\""));
   rule.format.setForeground(Qt::darkGreen);
   highlightingRules.append(rule);
 
