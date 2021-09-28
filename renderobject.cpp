@@ -20,9 +20,9 @@ void RenderDisplayObject::draw(QOpenGLShaderProgram &program, const QMatrix4x4 &
   m_displayObject->draw(program);
 }
 
-void RenderContainer::add(std::unique_ptr<RenderObject> ro)
+void RenderContainer::add(RenderObjectPtr ro)
 {
-  m_children.emplace_back(std::move(ro));
+  m_children.emplace_back(ro);
 }
 
 void RenderContainer::draw(QOpenGLShaderProgram &p, const QMatrix4x4 &t, bool helper)

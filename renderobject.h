@@ -9,6 +9,8 @@
 
 class QOpenGLShaderProgram;
 
+using RenderObjectPtr = std::shared_ptr<class RenderObject>;
+
 class PrimitiveProvider
 {
 public:
@@ -48,12 +50,12 @@ class RenderContainer : public RenderObject
 public:
   RenderContainer() = default;
 
-  void add(std::unique_ptr<RenderObject> ro);
+  void add(RenderObjectPtr ro);
 
   void draw(QOpenGLShaderProgram &, const QMatrix4x4 &, bool) override;
 
 private:
-  std::vector<std::unique_ptr<RenderObject>> m_children;
+  std::vector<RenderObjectPtr> m_children;
 };
 
 class HelperContainer : public RenderContainer

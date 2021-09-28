@@ -4,7 +4,8 @@
 #include <functional>
 #include <memory>
 
-class RenderObject;
+using RenderObjectPtr = std::shared_ptr<class RenderObject>;
+
 class QString;
 namespace slm
 {
@@ -18,7 +19,7 @@ class SceneHandler
 public:
   virtual ~SceneHandler() = default;
 
-  virtual void add_animation(const QString &, float l, const slm::vec3 &, std::unique_ptr<RenderObject>) = 0;
+  virtual void add_animation(const QString &, float l, const slm::vec3 &, RenderObjectPtr) = 0;
   virtual void on_tick(const Tick &) = 0;
 };
 

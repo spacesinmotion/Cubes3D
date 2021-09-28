@@ -16,7 +16,6 @@ extern "C"
 }
 
 using slm::vec3;
-using RenderObjectPtr = std::unique_ptr<RenderObject>;
 
 using CustomPtr = std::variant<RenderObjectPtr, s_float, s_vec3, vec3, QColor, FeWrap *>;
 
@@ -171,7 +170,7 @@ static RenderObjectPtr _uobj(fe_Context *ctx, fe_Object *o)
     fe_error(ctx, "Expect RenderObject!");
 
   auto *custom = reinterpret_cast<CustomPtr *>(fe_toptr(ctx, o));
-  return std::move(std::get<RenderObjectPtr>(*custom));
+  return std::get<RenderObjectPtr>(*custom);
 }
 
 FeWrap::FeWrap(SceneHandler &s)

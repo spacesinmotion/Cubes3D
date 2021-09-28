@@ -143,7 +143,7 @@ void View3D::clear_scene()
   m_timer.restart();
 }
 
-void View3D::add_animation(const QString &name, float l, const slm::vec3 &lp, std::unique_ptr<RenderObject> o)
+void View3D::add_animation(const QString &name, float l, const slm::vec3 &lp, RenderObjectPtr o)
 {
   m_animations.emplace_back(name, l, lp, std::move(o));
 }
